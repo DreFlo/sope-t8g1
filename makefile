@@ -4,9 +4,9 @@ CFLAGS = -g -Wall
 
 TARGET = xmod
 
-all: xmod
+all: ret
 
-xmod: $(TARGET)
+ret: $(TARGET)
 	$(CC) $(CFLAGS) -o $(TARGET) main.c
 
 clean:
