@@ -13,20 +13,30 @@
 #define PROGRAM_NAME "xmod"
 #define ARG_NO 2
 
-int main(int argc, char** argv) {
-    if (argc != ARG_NO + 1) {
+int main(int argc, char **argv, char **envp) {
+    if (argc < ARG_NO + 1) {
         printf("Incorrect arguments!\n");
         exit(EXIT_FAILURE);
     }
 
-    int mode;
+    mode_t old_mode, new_mode;
+    struct stat path_stat;
+    char *path = argv[argc - 1];
 
-    if (sscanf(argv[1], "%o", &mode) != 1) {
-        perror("sscanf");
+    //  load current path status into path_stat
+    if (stat(path, &path_stat)) {
+        perror("stat");
         exit(EXIT_FAILURE);
     }
 
-    if (chmod(argv[2], mode)) {
+    //  store current path permission mode
+    old_mode = path_stat.st_mode;
+
+    if (sscanf(argv[argc - 2], "%o", &new_mode) != 1 && get_mode_from_string(argv[argc - 2], &new_mode, old_mode)) {
+        exit(EXIT_FAILURE);
+    }
+
+    if (chmod(argv[2], new_mode)) {
         perror("chmod");
         exit(EXIT_FAILURE);
     }
