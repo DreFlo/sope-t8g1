@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -7,15 +8,10 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
+#include "xmod_utils.h"
 
 #define PROGRAM_NAME "xmod"
-#define ARG_NO 1
-
-int is_directory(const char * path) {
-    struct stat path_stat;
-    if (stat(path, &path_stat) != 0) return -1;
-    return S_ISDIR(path_stat.st_mode);
-}
+#define ARG_NO 2
 
 int main(int argc, char** argv) {
     if (argc != ARG_NO + 1) {
@@ -23,6 +19,18 @@ int main(int argc, char** argv) {
         exit(EXIT_FAILURE);
     }
 
+    int mode;
+
+    if (sscanf(argv[1], "%o", &mode) != 1) {
+        perror("sscanf");
+        exit(EXIT_FAILURE);
+    }
+
+    if (chmod(argv[2], mode)) {
+        perror("chmod");
+        exit(EXIT_FAILURE);
+    }
+    /*
     switch (is_directory(argv[1])) {
         case -1:
             printf("Not a valid file or directory path\n");
@@ -34,8 +42,6 @@ int main(int argc, char** argv) {
             printf("d\n");
             break;
     }
-
-    
-
+    */
     exit(EXIT_SUCCESS);
 }
