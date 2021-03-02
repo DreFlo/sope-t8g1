@@ -20,4 +20,5 @@ int is_directory(const char * path) {
 
 int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mode) {
     if (new_mode == NULL) return 1;
+    return 0;
 }

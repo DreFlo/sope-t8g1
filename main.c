@@ -12,6 +12,13 @@
 
 #define PROGRAM_NAME "xmod"
 #define ARG_NO 2
+#define EXTRA_MODE_INFO 0100000
+
+typedef struct {
+    bool v;                                                 /* Verbose */ 
+    bool c;                                                 /* Changes */
+    bool r;                                                 /* Recursive */
+}flag_t, * flag_p;
 
 int main(int argc, char **argv, char **envp) {
     if (argc < ARG_NO + 1) {
@@ -19,9 +26,10 @@ int main(int argc, char **argv, char **envp) {
         exit(EXIT_FAILURE);
     }
 
-    mode_t old_mode, new_mode;
-    struct stat path_stat;
-    char *path = argv[argc - 1];
+    mode_t old_mode, new_mode;                              /* File permission info struct */
+    struct stat path_stat;                                  /* Initial status of the argument path */
+    char *path = argv[argc - 1];                            /* Path specified in command line arguments */
+    flag_t flags = {false, false, false};                   /* Command line options flags */
 
     //  load current path status into path_stat
     if (stat(path, &path_stat)) {
@@ -32,14 +40,42 @@ int main(int argc, char **argv, char **envp) {
     //  store current path permission mode
     old_mode = path_stat.st_mode;
 
+    // store new mode specified by command line arguments (either OCTAL-MODE or MODE) 
     if (sscanf(argv[argc - 2], "%o", &new_mode) != 1 && get_mode_from_string(argv[argc - 2], &new_mode, old_mode)) {
         exit(EXIT_FAILURE);
     }
 
-    if (chmod(argv[2], new_mode)) {
+    // set flags from command line options
+    for (int i = 1; i < argc - 2; i++) {
+        char str[2];
+        sscanf(argv[i], "%s", str);
+        if (strcmp(str, "-v") == 0) flags.v = true;
+        else if (strcmp(str, "-c") == 0) flags.c = true;
+        else if (strcmp(str, "-R") == 0) flags.r = true;
+        else {
+            printf("%s is not a specified argument\n", str);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // change permissions
+    if (chmod(path, new_mode)) {
         perror("chmod");
         exit(EXIT_FAILURE);
     }
+    
+    // print messages if flags are set
+
+    if ((flags.v || flags.c) && new_mode != old_mode % EXTRA_MODE_INFO) {
+        printf("mode of '%s' changed from %.4o ([MODE STRING]) to %.4o ([MODE STRING])\n", path, old_mode % EXTRA_MODE_INFO, new_mode);
+    }
+
+    else if ((flags.v && !flags.c) && new_mode == old_mode % EXTRA_MODE_INFO) {
+        printf("mode of '%s' retained as %.4o ([MODE STRING])\n", path, new_mode);
+    }
+
+    // -----------end message printing
+
     /*
     switch (is_directory(argv[1])) {
         case -1:
@@ -53,5 +89,6 @@ int main(int argc, char **argv, char **envp) {
             break;
     }
     */
-    exit(EXIT_SUCCESS);
+
+    return 0;
 }
