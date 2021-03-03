@@ -30,6 +30,19 @@ int main(int argc, char **argv, char **envp) {
     struct stat path_stat;                                  /* Initial status of the argument path */
     char *path = argv[argc - 1];                            /* Path specified in command line arguments */
     flag_t flags = {false, false, false};                   /* Command line options flags */
+    char* log_path;
+
+    //Find envp to generate and store records
+    for (int i = 0; envp[i] != NULL; i++){
+        if(strstr(envp[i], "LOG_FILENAME") != NULL){
+            log_path = envp[i];
+            if (start_log_file(log_path) != 0){
+                printf("Incorrect path in LOG_FILENAME envp!\n");
+                exit(EXIT_FAILURE);
+            }
+            break;
+        }
+    }
 
     //  load current path status into path_stat
     if (stat(path, &path_stat)) {
@@ -73,6 +86,8 @@ int main(int argc, char **argv, char **envp) {
     else if ((flags.v && !flags.c) && new_mode == old_mode) {
         printf("mode of '%s' retained as %.4o ([MODE STRING])\n", path, new_mode);
     }
+
+    
 
     // -----------end message printing
 

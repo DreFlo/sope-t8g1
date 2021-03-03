@@ -21,6 +21,11 @@ enum file_class { FILE_CLASS_OWNER, FILE_CLASS_GROUP, FILE_CLASS_OTHER };
 enum file_permission { FILE_PERMISSION_READ, FILE_PERMISSION_WRITE, FILE_PERMISSION_EXEC };
 
 /**
+ * @brief Enumerates different types of events
+ */
+enum event {PROC_CREAT, PROC_EXIT, SIGNAL_RECV, SIGNAL_SENT, FILE_MODF};
+
+/**
  * @brief Get a bitmask for a permission on a certain class
  * @param c class for which permission will be set
  * @param p permission to be set
@@ -70,3 +75,17 @@ int is_directory(const char * path);
  * @return 0 on success, non-zero otherwise
  */
 int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mode);
+
+/**
+ * @brief Creates or cleans the file to store the execution registers
+ * @param path environmental variable "LOG_FILENAME"
+ * @return int 0 on success, non-zero otherwise
+ */
+int start_log_file(char *path);
+
+/**
+ * @brief Write execution register to file
+ * @param path file path to write
+ * @return int 
+ */
+int write_exec_register(char* path, enum event ev);
