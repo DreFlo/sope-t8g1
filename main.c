@@ -38,7 +38,7 @@ int main(int argc, char **argv, char **envp) {
     }
 
     //  store current path permission mode
-    old_mode = path_stat.st_mode;
+    old_mode = path_stat.st_mode % EXTRA_MODE_INFO;
 
     // store new mode specified by command line arguments (either OCTAL-MODE or MODE) 
     if (sscanf(argv[argc - 2], "%o", &new_mode) != 1 && get_mode_from_string(argv[argc - 2], &new_mode, old_mode)) {
@@ -66,11 +66,11 @@ int main(int argc, char **argv, char **envp) {
     
     // print messages if flags are set
 
-    if ((flags.v || flags.c) && new_mode != old_mode % EXTRA_MODE_INFO) {
-        printf("mode of '%s' changed from %.4o ([MODE STRING]) to %.4o ([MODE STRING])\n", path, old_mode % EXTRA_MODE_INFO, new_mode);
+    if ((flags.v || flags.c) && new_mode != old_mode) {
+        printf("mode of '%s' changed from %.4o ([MODE STRING]) to %.4o ([MODE STRING])\n", path, old_mode, new_mode);
     }
 
-    else if ((flags.v && !flags.c) && new_mode == old_mode % EXTRA_MODE_INFO) {
+    else if ((flags.v && !flags.c) && new_mode == old_mode) {
         printf("mode of '%s' retained as %.4o ([MODE STRING])\n", path, new_mode);
     }
 
