@@ -9,6 +9,8 @@
 #include <dirent.h>
 #include <string.h>
 #include <regex.h>
+#include <time.h>
+#include <stdarg.h>
 
 /**
  * @brief Enumerates various file classes
@@ -84,8 +86,10 @@ int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mo
 int start_log_file(char *path);
 
 /**
- * @brief Write execution register to file
- * @param path file path to write
+ * @brief Writes execution register in file
+ * @param argc number of arguments
+ * @param ... File path, enum that represents the type of event that occured and time in which the main process started.
+ *            Rest of arguments differ for each event.
  * @return int 
  */
-int write_exec_register(char* path, enum event ev);
+int write_exec_register(int argc, ...);
