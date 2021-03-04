@@ -70,3 +70,10 @@ int is_directory(const char * path);
  * @return 0 on success, non-zero otherwise
  */
 int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mode);
+
+/**
+ * @brief Gets file mode from mode_t and converts it into permissions sequence buf 
+ * @param mode file mode
+ * @param buf pointer to char where permissions sequence will be stored
+ */
+void str_mode(mode_t mode, char * buf);

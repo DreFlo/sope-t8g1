@@ -63,15 +63,19 @@ int main(int argc, char **argv, char **envp) {
         perror("chmod");
         exit(EXIT_FAILURE);
     }
+
+    char buf1[10], buf2[10];
+    str_mode(old_mode, buf1);
+    str_mode(new_mode, buf2);
     
     // print messages if flags are set
 
     if ((flags.v || flags.c) && new_mode != old_mode) {
-        printf("mode of '%s' changed from %.4o ([MODE STRING]) to %.4o ([MODE STRING])\n", path, old_mode, new_mode);
+        printf("mode of '%s' changed from %.4o ('%s') to %.4o ('%s')\n", path, old_mode, buf1, new_mode, buf2);
     }
 
     else if ((flags.v && !flags.c) && new_mode == old_mode) {
-        printf("mode of '%s' retained as %.4o ([MODE STRING])\n", path, new_mode);
+        printf("mode of '%s' retained as %.4o ('%s')\n", path, new_mode, buf1);
     }
 
     // -----------end message printing

@@ -22,3 +22,11 @@ int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mo
     if (new_mode == NULL) return 1;
     return 0;
 }
+
+void str_mode(mode_t mode, char * buf) {
+  const char permissions[] = "rwxrwxrwx";
+  for (size_t i = 0; i < 9; i++) {
+    buf[i] = (mode & (1 << (8-i))) ? permissions[i] : '-';
+  }
+  buf[9] = '\0';
+}
