@@ -10,6 +10,18 @@
 #include <string.h>
 #include <regex.h>
 
+typedef struct {
+    bool owner;
+    bool group;
+    bool other;
+}   UsersAccess;
+
+typedef struct {
+    bool read;
+    bool write;
+    bool execute;
+}   Permissions;
+
 /**
  * @brief Enumerates various file classes
  */
