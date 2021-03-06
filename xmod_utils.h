@@ -82,3 +82,9 @@ int is_directory(const char * path);
  * @return 0 on success, non-zero otherwise
  */
 int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mode);
+
+/**
+ * @brief Get the umask object
+ * @return Current system umask
+ */
+mode_t get_umask();

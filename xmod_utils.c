@@ -30,6 +30,7 @@ int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mo
     Permissions perm = {false, false, false};
     
     bool error = true;
+    bool change_umask_set = false;
 
     // Check if has an =, + or -
     for(int j = 0; rx[j] != '\0';j++) {
@@ -50,6 +51,7 @@ int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mo
     // Check for other users
     int i = 0;
     for(; rx[i] != '=' && rx[i] != '+' && rx[i] != '-'; i++) {
+        change_umask_set = true;
         switch (rx[i]) {
             case 'a':
                 ua.owner = true;
@@ -91,7 +93,6 @@ int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mo
     
 
     // Change the new_mode
-
     switch(op){
         case '+':
             *new_mode = old_mode;
@@ -189,5 +190,13 @@ int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mo
             break;
     }
 
+    if (!change_umask_set) *new_mode &= ~get_umask();
+
     return 0;
+}
+
+mode_t get_umask() {
+    mode_t mask = umask(0000);
+    umask(mask);
+    return mask;
 }

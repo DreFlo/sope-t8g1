@@ -40,6 +40,9 @@ int main(int argc, char **argv, char **envp) {
     //  store current path permission mode
     old_mode = path_stat.st_mode % EXTRA_MODE_INFO;
 
+    //set all new_mode bits to 0
+    memset(&new_mode, 0, sizeof(mode_t));
+
     // store new mode specified by command line arguments (either OCTAL-MODE or MODE) 
     if (sscanf(argv[argc - 2], "%o", &new_mode) != 1 && get_mode_from_string(argv[argc - 2], &new_mode, old_mode)) {
         exit(EXIT_FAILURE);
