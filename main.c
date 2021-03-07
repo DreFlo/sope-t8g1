@@ -45,6 +45,7 @@ int main(int argc, char **argv, char **envp) {
 
     // store new mode specified by command line arguments (either OCTAL-MODE or MODE) 
     if (sscanf(argv[argc - 2], "%o", &new_mode) != 1 && get_mode_from_string(argv[argc - 2], &new_mode, old_mode)) {
+        printf("Error mode\n");
         exit(EXIT_FAILURE);
     }
 

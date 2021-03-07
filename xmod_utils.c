@@ -29,61 +29,45 @@ int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mo
     UsersAccess ua = {false, false, false};
     Permissions perm = {false, false, false};
     
-    bool error = true;
-    bool change_umask_set = false;
+    if (strlen(rx) < 3 || strlen(rx) > 5) return 1;
 
-    // Check if has an =, + or -
-    for(int j = 0; rx[j] != '\0';j++) {
-        if(rx[j] != '=' && rx[j] != '+' && rx[j] != '-') 
-            continue;
-        error = false;
-        break;
-    }
-    if(error) return 1;
-
-    // Check if =, + or - is the first char
-    if(rx[0] == '=' || rx[0] == '+' || rx[0] == '-') {
-        ua.owner = true;
-        ua.group = true;
-        ua.other = true;
-    }
-
-    // Check for other users
-    int i = 0;
-    for(; rx[i] != '=' && rx[i] != '+' && rx[i] != '-'; i++) {
-        change_umask_set = true;
-        switch (rx[i]) {
-            case 'a':
-                ua.owner = true;
-                ua.group = true;
-                ua.other = true;
-                break;
-            case 'u':
-                ua.owner = true;
-                break;
-            case 'g':
-                ua.group = true;
-                break;
-            case 'o':
-                ua.other = true;
-                break;
-            default:
-                return 1;
-        }
+    // Check target
+    switch (rx[0]) {
+        case 'a':
+            ua.owner = true;
+            ua.group = true;
+            ua.other = true;
+            break;
+        case 'u':
+            ua.owner = true;
+            break;
+        case 'g':
+            ua.group = true;
+            break;
+        case 'o':
+            ua.other = true;
+            break;
+        default:
+            return 1;
     }
 
-    char op = rx[i];    // Operation 
+    // Operation
+    char op = rx[1];
 
     // Check for permissions 
-    for(int j = ++i; rx[j] != '\0'; j++) {
+    for(int j = 2; rx[j] != '\0'; j++) {
+        // Set permissions
         switch (rx[j]) {
             case 'r':
+                if (perm.read == true) return 1;
                 perm.read = true;
                 break;
             case 'w':
+                if (perm.write == true) return 1;
                 perm.write = true;
                 break;
             case 'x':
+                if (perm.execute == true) return 1;
                 perm.execute = true;
                 break;
             default:
@@ -188,9 +172,10 @@ int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mo
                         *new_mode = add_permission(*new_mode, FILE_CLASS_OTHER, i);
             }
             break;
-    }
+        default:
+            return 1;
 
-    if (!change_umask_set) *new_mode &= ~get_umask();
+    }
 
     return 0;
 }
