@@ -251,12 +251,13 @@ int write_exec_register(int argc, ...){
     char *event_s, *info;
     switch (ev)
     {
-        case PROC_CREAT:
+        case PROC_CREAT: //(..., char* cmd_args)
             event_s = "PROC_CREAT";
             info = va_arg(args, char*);
             break;
-        case PROC_EXIT:
+        case PROC_EXIT: //(..., int exit)
             event_s = "PROC_EXIT";
+            sprintf(info, "%d", va_arg(args, int));
             break;
         case SIGNAL_RECV:
             event_s = "SIGNAL_RECV";
@@ -264,10 +265,28 @@ int write_exec_register(int argc, ...){
         case SIGNAL_SENT:
             event_s = "SIGNAL_SENT";
             break;
-        case FILE_MODF:
+        case FILE_MODF: //(..., mode_t old, mode_t new)
             event_s = "FILE_MODF";
             char* bet = " : ";
-            info = va_arg(args, char*);
+            char *zero = "0";
+            mode_t old = va_arg(args, mode_t);
+            mode_t new = va_arg(args, mode_t);
+            char* old_s = (char*) malloc(4 * sizeof(mode_t));
+            char* new_s = (char*) malloc(4 * sizeof(mode_t));
+            char* old_s1 = (char*) malloc(3 * sizeof(mode_t));
+            char* new_s1 = (char*) malloc(3 * sizeof(mode_t));
+            sprintf(old_s1, "%o", old);
+            sprintf(new_s1, "%o", new);
+            strncat(old_s, zero, strlen(zero));
+            strncat(old_s, old_s1, strlen(old_s1));
+            strncat(new_s, zero, strlen(zero));
+            strncat(new_s, new_s1, strlen(new_s1));
+            info = (char*) malloc(sizeof(char) * strlen(path) + 15*sizeof(char));
+            memmove(info, path, strlen(path));
+            strncat(info, bet, strlen(bet));
+            strncat(info, old_s, strlen(old_s));
+            strncat(info, bet, strlen(bet));
+            strncat(info, new_s, strlen(new_s));
             break;
     }
     char *pid_s = (char*) malloc(sizeof(int));
@@ -281,7 +300,7 @@ int write_exec_register(int argc, ...){
     
     char *between = " ; ";
 
-    int file = open(path, O_WRONLY);
+    int file = open(path, O_WRONLY | O_APPEND);
 
     write(file, instant_s, strlen(instant_s));
     write(file, between, strlen(between));

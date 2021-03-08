@@ -113,7 +113,7 @@ int start_log_file(char *path);
 /**
  * @brief Writes execution register in file
  * @param argc number of arguments
- * @param ... File path, enum that represents the type of event that occured and time in which the main process started.
+ * @param ... Next three: File path, enum that represents the type of event that occured and time in which the main process started.
  *            Rest of arguments differ for each event.
  * @return int 
  */

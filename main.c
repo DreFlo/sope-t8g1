@@ -96,6 +96,9 @@ int main(int argc, char **argv, char **envp) {
         exit(EXIT_FAILURE);
     }
 
+    //writes FILE_MODF register
+    if(log_filename) write_exec_register(4, log_path, FILE_MODF, begin, old_mode, new_mode);
+
     char buf1[10], buf2[10];
     str_mode(old_mode, buf1);
     str_mode(new_mode, buf2);
@@ -125,6 +128,9 @@ int main(int argc, char **argv, char **envp) {
             break;
     }
     */
+
+    //writes successful PROC_EXIT register
+    if(log_filename) write_exec_register(4, log_path, PROC_EXIT, begin, EXIT_SUCCESS);
 
     return 0;
 }
