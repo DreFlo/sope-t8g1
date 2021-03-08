@@ -1,5 +1,5 @@
-#ifndef SIG_HANDLERS_H
-#define SIG_HANDLERS_H
+#ifndef _SIG_HANDLERS_H_
+#define _SIG_HANDLERS_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,14 +13,13 @@
 #include <dirent.h>
 #include <signal.h>
 #include <time.h>
+#include "xmod_macros.h"
 
 bool main_proc;                             /* Is the main process */
 pid_t proc_id;                              /* Proccess id */
 char * proc_start_path;                     /* Path the process was started with */
 unsigned int nftot;                         /* Total number of files found */
 unsigned int nfmod;                         /* Total number of files modified */
-
-int sig_no;
 
 /**
  * @brief Handler for SIGINT signals 
@@ -37,4 +36,4 @@ void sigquit_handler();
  */
 void sigcont_handler();
 
-#endif //SIG_HANDLERS_H
+#endif //_SIG_HANDLERS_H_

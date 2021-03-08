@@ -1,5 +1,7 @@
 #include "xmod_sig_handlers.h"
 
+int sig_no = 0;                  
+
 void sigint_handler() {
     char ans;
     if (!sig_no) printf("%d ; %s ; %u ; %u\n", proc_id, proc_start_path, nftot, nfmod);
@@ -21,7 +23,10 @@ void sigint_handler() {
                 case 'n':
                     kill(-proc_id, SIGCONT);
                     break;
-            } 
+            }
+        }
+        else {
+            sig_no = 0;
         }
     }
     else {

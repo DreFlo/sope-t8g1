@@ -11,17 +11,16 @@
 #include <signal.h>
 #include "xmod_utils.h"
 #include "xmod_sig_handlers.h"
+#include "xmod_macros.h"
 
 extern bool main_proc;
 extern pid_t proc_id;
 extern char * proc_start_path;
 extern unsigned int nftot, nfmod;
-extern int sig_no;
 
-#define PROGRAM_NAME "xmod"
-#define ARG_NO 2
-#define EXTRA_MODE_INFO 0100000
-
+/**
+ * @brief Struct with user settable flags
+ */
 typedef struct {
     bool v;                                                 /* Verbose */ 
     bool c;                                                 /* Changes */
@@ -29,30 +28,33 @@ typedef struct {
 }flag_t, * flag_p;
 
 int main(int argc, char **argv, char **envp) {
-    clock_t begin = clock();
+    clock_t begin = clock();                                /* beggining time of the program */
     
-    struct sigaction new, old;
-    sigset_t smask;
+    struct sigaction new;                                   /* sigaction struct for signal beahviour */
+    sigset_t smask;                                         /* smask for signal behaviour */
 
-    // set sig handlers
+    // Set sig handlers
 
+    // SIGINT
     if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
     new.sa_handler = sigint_handler;
     new.sa_mask = smask;
     new.sa_flags = 0;
-    if (sigaction(SIGINT, &new, &old) == -1) perror("sigaction");
+    if (sigaction(SIGINT, &new, NULL) == -1) perror("sigaction");
 
+    // SIGQUIT
     if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
     new.sa_handler = sigquit_handler;
     new.sa_mask = smask;
     new.sa_flags = 0;
-    if (sigaction(SIGQUIT, &new, &old) == -1) perror("sigaction");
+    if (sigaction(SIGQUIT, &new, NULL) == -1) perror("sigaction");
 
+    // SIGCONT
     if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
     new.sa_handler = sigcont_handler;
     new.sa_mask = smask;
     new.sa_flags = 0;
-    if (sigaction(SIGCONT, &new, &old) == -1) perror("sigaction");
+    if (sigaction(SIGCONT, &new, NULL) == -1) perror("sigaction");
 
     //--------------------
 
@@ -61,7 +63,6 @@ int main(int argc, char **argv, char **envp) {
     proc_start_path = argv[argc - 1];
     nfmod = 0;
     nftot = 0;
-    sig_no = 0;
 
     if (argc < ARG_NO + 1) {
         printf("Incorrect arguments!\n");
@@ -72,10 +73,10 @@ int main(int argc, char **argv, char **envp) {
     struct stat path_stat;                                  /* Initial status of the argument path */
     char *path = argv[argc - 1];                            /* Path specified in command line arguments */
     flag_t flags = {false, false, false};                   /* Command line options flags */
-    char *log_path;
-    bool log_filename = false;
+    char *log_path;                                         /* Logfile path */
+    bool log_filename = false;                              /* Is logfile defined or not */
 
-    //Find envp to generate and store records
+    // Find envp to generate and store records
     for (int i = 0; envp[i] != NULL; i++){
         if(strstr(envp[i], "LOG_FILENAME") != NULL){
             log_path = envp[i];
@@ -88,7 +89,7 @@ int main(int argc, char **argv, char **envp) {
         }
     }
 
-    //Write PROC_CREAT event
+    // Write PROC_CREAT event
     if (log_filename){
         char *arg = (char*) malloc (argc * strlen(argv[argc - 1]));
         char *space = " ";
@@ -99,25 +100,25 @@ int main(int argc, char **argv, char **envp) {
         write_exec_register(4, log_path, PROC_CREAT, begin, arg);
     }
 
-    //  load current path status into path_stat
+    // Load current path status into path_stat
     if (stat(path, &path_stat)) {
         perror("stat");
         exit(EXIT_FAILURE);
     }
 
-    //  store current path permission mode
+    // Store current path permission mode
     old_mode = path_stat.st_mode % EXTRA_MODE_INFO;
 
-    //set all new_mode bits to 0
+    // Set all new_mode bits to 0
     memset(&new_mode, 0, sizeof(mode_t));
 
-    // store new mode specified by command line arguments (either OCTAL-MODE or MODE) 
+    // Store new mode specified by command line arguments (either OCTAL-MODE or MODE) 
     if (sscanf(argv[argc - 2], "%o", &new_mode) != 1 && get_mode_from_string(argv[argc - 2], &new_mode, old_mode)) {
         printf("Error mode\n");
         exit(EXIT_FAILURE);
     }
 
-    // set flags from command line options
+    // Set flags from command line options
     for (int i = 1; i < argc - 2; i++) {
         char str[2];
         sscanf(argv[i], "%s", str);
@@ -130,20 +131,43 @@ int main(int argc, char **argv, char **envp) {
         }
     }
 
-    // change permissions
+    // For tests with more than one process
+    /*
+    int id = fork();
+
+    switch (id)
+    {
+    case -1:
+        exit(1);
+    case 0:
+        main_proc = false;
+        proc_id = getpid();
+        proc_start_path = "Child";
+        nfmod = 0;
+        nftot = 0;
+        pause();
+        exit(0);
+    default:
+        raise(SIGINT);
+        break;
+    }
+    */
+
+    // Change permissions
     if (chmod(path, new_mode)) {
         perror("chmod");
         exit(EXIT_FAILURE);
     }
 
-    //writes FILE_MODF register
+    // Writes FILE_MODF register
     if(log_filename) write_exec_register(4, log_path, FILE_MODF, begin, old_mode, new_mode);
 
+    // Get mode strings
     char buf1[10], buf2[10];
     str_mode(old_mode, buf1);
     str_mode(new_mode, buf2);
     
-    // print messages if flags are set
+    // Print messages if flags are set
 
     if ((flags.v || flags.c) && new_mode != old_mode) {
         printf("mode of '%s' changed from %.4o ('%s') to %.4o ('%s')\n", path, old_mode, buf1, new_mode, buf2);
@@ -169,8 +193,12 @@ int main(int argc, char **argv, char **envp) {
     }
     */
 
-    //writes successful PROC_EXIT register
+    // Writes successful PROC_EXIT register
+
     if(log_filename) write_exec_register(4, log_path, PROC_EXIT, begin, EXIT_SUCCESS);
 
+    // Wait for all children to terminate
+    wait(NULL);
+    
     return 0;
 }

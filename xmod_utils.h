@@ -1,5 +1,5 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef _UTILS_H_
+#define _UTILS_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,13 +14,20 @@
 #include <regex.h>
 #include <time.h>
 #include <stdarg.h>
+#include "xmod_macros.h"
 
+/**
+ * @brief Struct with accesses to change 
+ */
 typedef struct {
     bool owner;
     bool group;
     bool other;
 }   UsersAccess;
 
+/**
+ * @brief Struct with permissions to change
+ */
 typedef struct {
     bool read;
     bool write;
@@ -122,4 +129,4 @@ int start_log_file(char *path);
  */
 int write_exec_register(int argc, ...);
 
-#endif //UTILS_H
+#endif //_UTILS_H_
