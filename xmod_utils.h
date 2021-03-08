@@ -1,3 +1,6 @@
+#ifndef UTILS_H
+#define UTILS_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -95,3 +98,5 @@ mode_t get_umask();
  * @param buf pointer to char where permissions sequence will be stored
  */
 void str_mode(mode_t mode, char * buf);
+
+#endif //UTILS_H
