@@ -12,6 +12,10 @@ mode_t add_permission(mode_t m, enum file_class c, enum file_permission p) {
     return m | bitmask_permission(c, p);
 }
 
+mode_t subtract_permission(mode_t m, enum file_class c, enum file_permission p) {
+    return m & ~bitmask_permission(c, p);
+}
+
 int is_directory(const char * path) {
     struct stat path_stat;
     if (stat(path, &path_stat) != 0) return -1;
@@ -101,6 +105,7 @@ int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mo
                     *new_mode = add_permission(*new_mode, FILE_CLASS_OTHER, FILE_PERMISSION_EXEC);
             }
             break;
+
         case '-':
             *new_mode = old_mode;
 
@@ -129,6 +134,7 @@ int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mo
                     *new_mode = subtract_permission(*new_mode, FILE_CLASS_OTHER, FILE_PERMISSION_EXEC);
             }
             break;
+
         case '=':
             if(ua.owner) {
                 if(perm.read) 
@@ -138,7 +144,7 @@ int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mo
                 if(perm.execute)
                     *new_mode = add_permission(*new_mode, FILE_CLASS_OWNER, FILE_PERMISSION_EXEC);
             } else {
-                for(int i = FILE_PERMISSION_READ; i < FILE_PERMISSION_EXEC; i++) 
+                for(int i = FILE_PERMISSION_READ; i <= FILE_PERMISSION_EXEC; i++) 
                     if(check_permission(old_mode, FILE_CLASS_OWNER, i))
                         *new_mode = add_permission(*new_mode, FILE_CLASS_OWNER, i);
             }
@@ -150,7 +156,7 @@ int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mo
                 if(perm.execute)
                     *new_mode = add_permission(*new_mode, FILE_CLASS_GROUP, FILE_PERMISSION_EXEC);
             } else {
-                for(int i = FILE_PERMISSION_READ; i < FILE_PERMISSION_EXEC; i++) 
+                for(int i = FILE_PERMISSION_READ; i <= FILE_PERMISSION_EXEC; i++) 
                     if(check_permission(old_mode, FILE_CLASS_GROUP, i))
                         *new_mode = add_permission(*new_mode, FILE_CLASS_GROUP, i);
             }
@@ -162,7 +168,7 @@ int get_mode_from_string(const char * rx, mode_t * new_mode, const mode_t old_mo
                 if(perm.execute)
                     *new_mode = add_permission(*new_mode, FILE_CLASS_OTHER, FILE_PERMISSION_EXEC);
             } else {
-                for(int i = FILE_PERMISSION_READ; i < FILE_PERMISSION_EXEC; i++) 
+                for(int i = FILE_PERMISSION_READ; i <= FILE_PERMISSION_EXEC; i++) 
                     if(check_permission(old_mode, FILE_CLASS_OTHER, i))
                         *new_mode = add_permission(*new_mode, FILE_CLASS_OTHER, i);
             }
