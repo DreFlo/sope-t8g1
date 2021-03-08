@@ -21,6 +21,8 @@ typedef struct {
 }flag_t, * flag_p;
 
 int main(int argc, char **argv, char **envp) {
+    clock_t begin = clock();
+
     if (argc < ARG_NO + 1) {
         printf("Incorrect arguments!\n");
         exit(EXIT_FAILURE);
@@ -30,6 +32,32 @@ int main(int argc, char **argv, char **envp) {
     struct stat path_stat;                                  /* Initial status of the argument path */
     char *path = argv[argc - 1];                            /* Path specified in command line arguments */
     flag_t flags = {false, false, false};                   /* Command line options flags */
+    char *log_path;
+    bool log_filename = false;
+
+    //Find envp to generate and store records
+    for (int i = 0; envp[i] != NULL; i++){
+        if(strstr(envp[i], "LOG_FILENAME") != NULL){
+            log_path = envp[i];
+            if (start_log_file(log_path) != 0){
+                printf("Incorrect path in LOG_FILENAME envp!\n");
+                exit(EXIT_FAILURE);
+            }
+            log_filename = true;
+            break;
+        }
+    }
+
+    //Write PROC_CREAT event
+    if (log_filename){
+        char *arg = (char*) malloc (argc * strlen(argv[argc - 1]));
+        char *space = " ";
+        for (int i = 0; i < argc; i++){
+            strncat(arg, argv[i], strlen(argv[i]));
+            strncat(arg, space, strlen(space));
+        }
+        write_exec_register(4, log_path, PROC_CREAT, begin, arg);
+    }
 
     //  load current path status into path_stat
     if (stat(path, &path_stat)) {

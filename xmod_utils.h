@@ -9,6 +9,8 @@
 #include <dirent.h>
 #include <string.h>
 #include <regex.h>
+#include <time.h>
+#include <stdarg.h>
 
 typedef struct {
     bool owner;
@@ -31,6 +33,11 @@ enum file_class { FILE_CLASS_OWNER, FILE_CLASS_GROUP, FILE_CLASS_OTHER };
  * @brief Enumerates various file permissions
  */
 enum file_permission { FILE_PERMISSION_READ, FILE_PERMISSION_WRITE, FILE_PERMISSION_EXEC };
+
+/**
+ * @brief Enumerates different types of events
+ */
+enum event {PROC_CREAT, PROC_EXIT, SIGNAL_RECV, SIGNAL_SENT, FILE_MODF};
 
 /**
  * @brief Get a bitmask for a permission on a certain class
@@ -95,3 +102,19 @@ mode_t get_umask();
  * @param buf pointer to char where permissions sequence will be stored
  */
 void str_mode(mode_t mode, char * buf);
+
+/**
+ * @brief Creates or cleans the file to store the execution registers
+ * @param path environmental variable "LOG_FILENAME"
+ * @return int 0 on success, non-zero otherwise
+ */
+int start_log_file(char *path);
+
+/**
+ * @brief Writes execution register in file
+ * @param argc number of arguments
+ * @param ... File path, enum that represents the type of event that occured and time in which the main process started.
+ *            Rest of arguments differ for each event.
+ * @return int 
+ */
+int write_exec_register(int argc, ...);
