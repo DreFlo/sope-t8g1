@@ -367,7 +367,6 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
                 set_child_proccess_info(new_path);
                 DIR * new_dir = opendir(new_path);
                 recursive_xmod(new_path, new_dir, new_mode, old_mode, flags);
-                pause();
                 goto EXIT;
             default:
                 break;
@@ -380,7 +379,6 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
     }
 
 EXIT:
-    if (!main_proc) wait(NULL);
     return;   
 }
 
