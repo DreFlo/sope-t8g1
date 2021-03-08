@@ -368,3 +368,10 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
 
     return;   
 }
+
+void set_child_proccess_info() {
+    main_proc = false;
+    proc_id = getpid();
+    nftot = 0;
+    nfmod = 0;
+}
