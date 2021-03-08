@@ -8,7 +8,15 @@
 #include <unistd.h>
 #include <dirent.h>
 #include <string.h>
+#include <signal.h>
 #include "xmod_utils.h"
+#include "xmod_sig_handlers.h"
+
+extern bool main_proc;
+extern pid_t proc_id;
+extern char * proc_start_path;
+extern unsigned int nftot, nfmod;
+extern int sig_no;
 
 #define PROGRAM_NAME "xmod"
 #define ARG_NO 2
@@ -22,6 +30,38 @@ typedef struct {
 
 int main(int argc, char **argv, char **envp) {
     clock_t begin = clock();
+    
+    struct sigaction new, old;
+    sigset_t smask;
+
+    // set sig handlers
+
+    if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
+    new.sa_handler = sigint_handler;
+    new.sa_mask = smask;
+    new.sa_flags = 0;
+    if (sigaction(SIGINT, &new, &old) == -1) perror("sigaction");
+
+    if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
+    new.sa_handler = sigquit_handler;
+    new.sa_mask = smask;
+    new.sa_flags = 0;
+    if (sigaction(SIGQUIT, &new, &old) == -1) perror("sigaction");
+
+    if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
+    new.sa_handler = sigcont_handler;
+    new.sa_mask = smask;
+    new.sa_flags = 0;
+    if (sigaction(SIGCONT, &new, &old) == -1) perror("sigaction");
+
+    //--------------------
+
+    main_proc = true;
+    proc_id = getpid();
+    proc_start_path = argv[argc - 1];
+    nfmod = 0;
+    nftot = 0;
+    sig_no = 0;
 
     if (argc < ARG_NO + 1) {
         printf("Incorrect arguments!\n");

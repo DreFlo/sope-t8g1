@@ -1,3 +1,6 @@
+#ifndef UTILS_H
+#define UTILS_H
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -118,3 +121,5 @@ int start_log_file(char *path);
  * @return int 
  */
 int write_exec_register(int argc, ...);
+
+#endif //UTILS_H
