@@ -18,15 +18,6 @@ extern pid_t proc_id;
 extern char * proc_start_path;
 extern unsigned int nftot, nfmod;
 
-/**
- * @brief Struct with user settable flags
- */
-typedef struct {
-    bool v;                                                 /* Verbose */ 
-    bool c;                                                 /* Changes */
-    bool r;                                                 /* Recursive */
-}flag_t, * flag_p;
-
 int main(int argc, char **argv, char **envp) {
     clock_t begin = clock();                                /* beggining time of the program */
     
@@ -153,6 +144,7 @@ int main(int argc, char **argv, char **envp) {
     }
     */
 
+   /*
     // Change permissions
     if (chmod(path, new_mode)) {
         perror("chmod");
@@ -194,6 +186,14 @@ int main(int argc, char **argv, char **envp) {
     */
 
     // Writes successful PROC_EXIT register
+
+    if (flags.r && S_ISDIR(path_stat.st_mode)) {
+        if (path[strlen(path) - 1] != '/') strcat(path, "/");
+        DIR * dir = opendir(path);
+        recursive_xmod(path, dir, new_mode, old_mode, flags);
+    } else {
+        xmod(path, new_mode, old_mode, flags);
+    }
 
     if(log_filename) write_exec_register(4, log_path, PROC_EXIT, begin, EXIT_SUCCESS);
 

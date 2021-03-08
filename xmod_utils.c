@@ -316,3 +316,55 @@ int write_exec_register(int argc, ...){
     va_end(args);
     return 0;
 }
+
+void xmod(const char * path, const mode_t new_mode, const mode_t old_mode, const flag_t flags) {
+    int ret = chmod(path, new_mode);
+
+    // Get mode strings
+    char buf1[10], buf2[10];
+    str_mode(old_mode, buf1);
+    str_mode(new_mode, buf2);
+    
+    // Print messages if flags are set
+
+    if ((flags.v || flags.c) && new_mode != old_mode) {
+        printf("mode of '%s' changed from %.4o ('%s') to %.4o ('%s')\n", path, old_mode, buf1, new_mode, buf2);
+    }
+
+    else if ((flags.v && !flags.c) && new_mode == old_mode) {
+        printf("mode of '%s' retained as %.4o ('%s')\n", path, new_mode, buf1);
+    }
+}
+
+void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t old_mode, const flag_t flags) {
+    struct dirent * dir_struct;                     /* Pointer to current directory struct */
+    char new_path[1024];                            /* Path string for each thing in directory */
+    struct stat path_stat;                          /* Status of new_path */
+
+    // change path permissions
+    xmod(path, new_mode, old_mode, flags);
+
+    while ((dir_struct = readdir(dir)) != NULL) {
+        // ignore current folder and parent folder
+        if (!strcmp(dir_struct->d_name, ".") || !strcmp(dir_struct->d_name, "..")) continue;
+
+        // get current path
+        memcpy(new_path, path, strlen(path) + 1);
+        strcat(new_path, dir_struct->d_name);
+
+        // get current path status
+        stat(new_path, &path_stat);
+
+        if (S_ISDIR(path_stat.st_mode)) {
+            strcat(new_path, "/");
+            DIR * new_dir = opendir(new_path);
+            recursive_xmod(new_path, new_dir, new_mode, old_mode, flags);
+            
+        }
+        else if (S_ISREG(path_stat.st_mode)) {
+            xmod(new_path, new_mode, old_mode, flags);
+        }
+    } 
+
+    return;   
+}

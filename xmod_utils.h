@@ -17,6 +17,15 @@
 #include "xmod_macros.h"
 
 /**
+ * @brief Struct with user settable flags
+ */
+typedef struct {
+    bool v;                                                 /* Verbose */ 
+    bool c;                                                 /* Changes */
+    bool r;                                                 /* Recursive */
+}flag_t, * flag_p;
+
+/**
  * @brief Struct with accesses to change 
  */
 typedef struct {
@@ -128,5 +137,9 @@ int start_log_file(char *path);
  * @return int 
  */
 int write_exec_register(int argc, ...);
+
+void xmod(const char * path, const mode_t new_mode, const mode_t old_mode, const flag_t flags);
+
+void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t old_mode, const flag_t flags);
 
 #endif //_UTILS_H_
