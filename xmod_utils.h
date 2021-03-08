@@ -165,7 +165,8 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
 
 /**
  * @brief Sets child proccess info, should be called everytime a new child process is created
+ * @param path Process main path
  */
-void set_child_proccess_info();
+void set_child_proccess_info(char * path);
 
 #endif //_UTILS_H_

@@ -199,6 +199,5 @@ int main(int argc, char **argv, char **envp) {
 
     // Wait for all children to terminate
     wait(NULL);
-    
     return 0;
 }

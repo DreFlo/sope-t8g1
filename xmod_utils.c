@@ -340,6 +340,7 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
     struct dirent * dir_struct;                     /* Pointer to current directory struct */
     char new_path[1024];                            /* Path string for each thing in directory */
     struct stat path_stat;                          /* Status of new_path */
+    pid_t id;                                       /* For multi-proccessing */
 
     // change path permissions
     xmod(path, new_mode, old_mode, flags);
@@ -356,22 +357,37 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
         stat(new_path, &path_stat);
 
         if (S_ISDIR(path_stat.st_mode)) {
-            strcat(new_path, "/");
-            DIR * new_dir = opendir(new_path);
-            recursive_xmod(new_path, new_dir, new_mode, old_mode, flags);
+            switch (id = fork())
+            {
+            case -1:
+                perror("fork:");
+                exit(EXIT_FAILURE);
+            case 0:
+                strcat(new_path, "/");
+                set_child_proccess_info(new_path);
+                DIR * new_dir = opendir(new_path);
+                recursive_xmod(new_path, new_dir, new_mode, old_mode, flags);
+                pause();
+                goto EXIT;
+            default:
+                break;
+            }
             
         }
         else if (S_ISREG(path_stat.st_mode)) {
             xmod(new_path, new_mode, old_mode, flags);
         }
-    } 
+    }
 
+EXIT:
+    if (!main_proc) wait(NULL);
     return;   
 }
 
-void set_child_proccess_info() {
+void set_child_proccess_info(char * path) {
     main_proc = false;
     proc_id = getpid();
+    proc_start_path = path;
     nftot = 0;
     nfmod = 0;
 }
