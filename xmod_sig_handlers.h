@@ -32,7 +32,7 @@ extern bool log_filename;
 /**
  * @brief Kills all children of this process
  * @param sig signal to kill with
- * @return 0 on success (at least one children killed)
+ * @return 0 on success (at least one children killed), 1 otherwise
  */
 int kill_all_children(int sig);
 

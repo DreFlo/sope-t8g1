@@ -4,7 +4,7 @@ int kill_all_children(int sig) {
     int ret = 1;
     for (int i = 0; i < child_no; i++) {
         if (kill(children[i], sig) == 0) {
-            return 0;
+            ret = 0;
         }
         if (log_filename) write_exec_register(3, SIGNAL_SENT, "SIGINT", children[i]);
         
