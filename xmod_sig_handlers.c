@@ -1,14 +1,15 @@
 #include "xmod_sig_handlers.h"
 
 int kill_all_children(int sig) {
+    int ret = 1;
     for (int i = 0; i < child_no; i++) {
-        if (kill(children[i], sig) != 0) {
-            return 1;
+        if (kill(children[i], sig) == 0) {
+            return 0;
         }
         if (log_filename) write_exec_register(3, SIGNAL_SENT, "SIGINT", children[i]);
         
     }
-    return 0;
+    return ret;
 }
 
 void sigint_handler() {

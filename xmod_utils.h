@@ -30,6 +30,15 @@ extern clock_t begin;
 extern bool log_filename;
 
 /**
+ * @brief Struct with user settable flags
+ */
+typedef struct {
+    bool v;                                                 /* Verbose */ 
+    bool c;                                                 /* Changes */
+    bool r;                                                 /* Recursive */
+}flag_t, * flag_p;
+
+/**
  * @brief Struct with accesses to change 
  */
 typedef struct {
@@ -146,5 +155,30 @@ int write_exec_register(int argc, ...);
  * @param pid Child pid to register
  */
 void register_new_child(pid_t pid);
+
+/**
+ * @brief Sets child proccess info, should be called everytime a new child process is created
+ * @param path Process main path
+ */
+void set_child_proccess_info(char * path);
+
+/**
+ * @brief Changes mode of a single file or directory, prints info on screen according to flags
+ * @param path path of file or directory to change
+ * @param new_mode new path mode
+ * @param old_mode old path mode
+ * @param flags user set flags
+ */
+void xmod(const char * path, const mode_t new_mode, const mode_t old_mode, const flag_t flags);
+
+/**
+ * @brief Recursively changes mode of all files and sub-directories in path
+ * @param path path of file or directory to change
+ * @param dir pointer to directory to cycle through
+ * @param new_mode new path mode
+ * @param old_mode old path mode
+ * @param flags user set flags 
+ */
+void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t old_mode, const flag_t flags);
 
 #endif //_UTILS_H_

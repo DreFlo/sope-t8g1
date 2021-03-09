@@ -26,14 +26,6 @@ char *log_path;                                             /* Logfile path */
 clock_t begin;                                              /* beggining time of the program */
 bool log_filename;                                          /* Is logfile defined or not */
 
-/**
- * @brief Struct with user settable flags
- */
-typedef struct {
-    bool v;                                                 /* Verbose */ 
-    bool c;                                                 /* Changes */
-    bool r;                                                 /* Recursive */
-}flag_t, * flag_p;
 
 int main(int argc, char **argv, char **envp) {
     begin = clock();
@@ -95,6 +87,7 @@ int main(int argc, char **argv, char **envp) {
     proc_start_path = argv[argc - 1];
     nfmod = 0;
     nftot = 0;
+    child_no = 0;
 
     if (argc < ARG_NO + 1) {
         printf("Incorrect arguments!\n");
@@ -159,6 +152,7 @@ int main(int argc, char **argv, char **envp) {
     }
     */
 
+   /*
     // Change permissions
     if (chmod(path, new_mode)) {
         perror("chmod");
@@ -200,10 +194,18 @@ int main(int argc, char **argv, char **envp) {
     */
 
     // Writes successful PROC_EXIT register
-    if(log_filename) write_exec_register(2, PROC_EXIT, EXIT_SUCCESS);
+
+    if (flags.r && S_ISDIR(path_stat.st_mode)) {
+        if (path[strlen(path) - 1] != '/') strcat(path, "/");
+        DIR * dir = opendir(path);
+        recursive_xmod(path, dir, new_mode, old_mode, flags);
+    } else {
+        xmod(path, new_mode, old_mode, flags);
+    }
+
+    if(log_filename) write_exec_register(4, log_path, PROC_EXIT, begin, EXIT_SUCCESS);
 
     // Wait for all children to terminate
     wait(NULL);
-    
     return 0;
 }
