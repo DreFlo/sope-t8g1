@@ -16,6 +16,15 @@
 #include <stdarg.h>
 #include "xmod_macros.h"
 
+extern bool main_proc;
+extern pid_t proc_id;
+extern char * proc_start_path;
+extern unsigned int nftot;
+extern unsigned int nfmod;
+
+extern pid_t children[128];
+extern int child_no;
+
 extern char* log_path;
 extern clock_t begin;
 extern bool log_filename;
@@ -131,5 +140,11 @@ int start_log_file();
  * @return int 
  */
 int write_exec_register(int argc, ...);
+
+/**
+ * @brief Registers new child pid in children. To be run by the parent after every fork.
+ * @param pid Child pid to register
+ */
+void register_new_child(pid_t pid);
 
 #endif //_UTILS_H_

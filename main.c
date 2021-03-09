@@ -13,10 +13,14 @@
 #include "xmod_sig_handlers.h"
 #include "xmod_macros.h"
 
-extern bool main_proc;
-extern pid_t proc_id;
-extern char * proc_start_path;
-extern unsigned int nftot, nfmod;
+bool main_proc;                                             /* Is the main process */
+pid_t proc_id;                                              /* Proccess id */
+char * proc_start_path;                                     /* Path the process was started with */
+unsigned int nftot;                                         /* Total number of files found */
+unsigned int nfmod;                                         /* Total number of files modified */
+
+pid_t children[128];                                        /* Array containing the pids of all the children of the process */
+int child_no;                                               /* Number of child processes */
 
 char *log_path;                                             /* Logfile path */
 clock_t begin;                                              /* beggining time of the program */

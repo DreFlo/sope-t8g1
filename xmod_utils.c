@@ -323,3 +323,8 @@ int write_exec_register(int argc, ...){
     va_end(args);
     return 0;
 }
+
+void register_new_child(pid_t pid) {
+    children[child_no] = pid;
+    child_no++;
+}

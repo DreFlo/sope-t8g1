@@ -16,11 +16,25 @@
 #include "xmod_macros.h"
 #include "xmod_utils.h"
 
-bool main_proc;                             /* Is the main process */
-pid_t proc_id;                              /* Proccess id */
-char * proc_start_path;                     /* Path the process was started with */
-unsigned int nftot;                         /* Total number of files found */
-unsigned int nfmod;                         /* Total number of files modified */
+extern bool main_proc;
+extern pid_t proc_id;
+extern char * proc_start_path;
+extern unsigned int nftot;
+extern unsigned int nfmod;
+
+extern pid_t children[128];
+extern int child_no;
+
+extern char* log_path;
+extern clock_t begin;
+extern bool log_filename;
+
+/**
+ * @brief Kills all children of this process
+ * @param sig signal to kill with
+ * @return 0 on success (all children killed), 1 on failure (errno set)
+ */
+int kill_all_children(int sig);
 
 /**
  * @brief Handler for SIGINT signals 
