@@ -15,11 +15,11 @@
 #include <time.h>
 #include "xmod_macros.h"
 
-bool main_proc;                             /* Is the main process */
-pid_t proc_id;                              /* Proccess id */
-char * proc_start_path;                     /* Path the process was started with */
-unsigned int nftot;                         /* Total number of files found */
-unsigned int nfmod;                         /* Total number of files modified */
+extern bool main_proc;
+extern pid_t proc_id;
+extern char * proc_start_path;
+extern unsigned int nftot;
+extern unsigned int nfmod;
 
 /**
  * @brief Handler for SIGINT signals 

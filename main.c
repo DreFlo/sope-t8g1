@@ -13,10 +13,11 @@
 #include "xmod_sig_handlers.h"
 #include "xmod_macros.h"
 
-extern bool main_proc;
-extern pid_t proc_id;
-extern char * proc_start_path;
-extern unsigned int nftot, nfmod;
+bool main_proc;                             /* Is the main process */
+pid_t proc_id;                              /* Proccess id */
+char * proc_start_path;                     /* Path the process was started with */
+unsigned int nftot;                         /* Total number of files found */
+unsigned int nfmod;                         /* Total number of files modified */
 
 int main(int argc, char **argv, char **envp) {
     clock_t begin = clock();                                /* beggining time of the program */
