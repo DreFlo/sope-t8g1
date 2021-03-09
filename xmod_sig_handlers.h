@@ -14,6 +14,7 @@
 #include <signal.h>
 #include <time.h>
 #include "xmod_macros.h"
+#include "xmod_utils.h"
 
 bool main_proc;                             /* Is the main process */
 pid_t proc_id;                              /* Proccess id */

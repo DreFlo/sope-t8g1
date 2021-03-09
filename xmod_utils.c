@@ -195,22 +195,22 @@ void str_mode(mode_t mode, char * buf) {
   buf[9] = '\0';
 }
 
-int start_log_file(char* path){
-    for(size_t i = 0; i < strlen(path); i++){
-        if(path[i] == '='){
-            memmove(path, path + i + 1, strlen(path) - i);
+int start_log_file(){
+    for(size_t i = 0; i < strlen(log_path); i++){
+        if(log_path[i] == '='){
+            memmove(log_path, log_path + i + 1, strlen(log_path) - i);
             break;
         }
     }
 
-    char* folder_path = (char*) malloc(strlen(path));
-    char* file_path = (char*) malloc(strlen(path) + 4*sizeof(char));
+    char* folder_path = (char*) malloc(strlen(log_path));
+    char* file_path = (char*) malloc(strlen(log_path) + 4*sizeof(char));
 
-    switch(is_directory(path)){
+    switch(is_directory(log_path)){
         case -1:;
-            for(size_t i = strlen(path) - 1; i >= 0; i--){
-                if(path[i] == '/'){
-                    memmove(folder_path, path, i + 1);
+            for(size_t i = strlen(log_path) - 1; i >= 0; i--){
+                if(log_path[i] == '/'){
+                    memmove(folder_path, log_path, i + 1);
                     break;
                 }
             }
@@ -224,16 +224,16 @@ int start_log_file(char* path){
         case 0:;
             break;
         default:;
-            char* file_name = (char*) malloc(strlen(path));
+            char* file_name = (char*) malloc(strlen(log_path));
             file_name = "logs";
-            if(path[strlen(path) - 1] != '/'){
+            if(log_path[strlen(log_path) - 1] != '/'){
                 char* add = "/";
-                strcat(path, add);
+                strcat(log_path, add);
             }
-            strcat(path, file_name);
+            strcat(log_path, file_name);
     }
 
-    int file = open(path, O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IXUSR);
+    int file = open(log_path, O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IXUSR);
     close(file);
 
     return 0;
@@ -243,12 +243,11 @@ int write_exec_register(int argc, ...){
     va_list args;
     va_start(args, argc);
 
-    char* path = va_arg(args, char*);
     enum event ev = va_arg(args, enum event);
-    clock_t begin = va_arg(args, clock_t);
 
     pid_t pid = getpid();
     char *event_s, *info;
+    char* bet = " : ";
     switch (ev)
     {
         case PROC_CREAT: //(..., char* cmd_args)
@@ -259,15 +258,23 @@ int write_exec_register(int argc, ...){
             event_s = "PROC_EXIT";
             sprintf(info, "%d", va_arg(args, int));
             break;
-        case SIGNAL_RECV:
+        case SIGNAL_RECV: //(..., char* signal)
             event_s = "SIGNAL_RECV";
+            info = va_arg(args, char*);
             break;
-        case SIGNAL_SENT:
+        case SIGNAL_SENT: //(..., char*signal, pid_t pid)
             event_s = "SIGNAL_SENT";
+            char* signal = va_arg(args, char*);
+            pid_t target_pid = va_arg(args, pid_t);
+            char* target_pid_s = (char*) malloc(sizeof(target_pid_s));
+            sprintf(target_pid_s, "%i", target_pid);
+            info = (char*) malloc(sizeof(signal) + sizeof(target_pid_s) + sizeof(bet));
+            memmove(info, signal, strlen(signal));
+            strncat(info, bet, strlen(bet));
+            strncat(info, target_pid_s, strlen(target_pid_s));
             break;
         case FILE_MODF: //(..., mode_t old, mode_t new)
             event_s = "FILE_MODF";
-            char* bet = " : ";
             char *zero = "0";
             mode_t old = va_arg(args, mode_t);
             mode_t new = va_arg(args, mode_t);
@@ -281,8 +288,8 @@ int write_exec_register(int argc, ...){
             strncat(old_s, old_s1, strlen(old_s1));
             strncat(new_s, zero, strlen(zero));
             strncat(new_s, new_s1, strlen(new_s1));
-            info = (char*) malloc(sizeof(char) * strlen(path) + 15*sizeof(char));
-            memmove(info, path, strlen(path));
+            info = (char*) malloc(sizeof(char) * strlen(log_path) + 15*sizeof(char));
+            memmove(info, log_path, strlen(log_path));
             strncat(info, bet, strlen(bet));
             strncat(info, old_s, strlen(old_s));
             strncat(info, bet, strlen(bet));
@@ -300,7 +307,7 @@ int write_exec_register(int argc, ...){
     
     char *between = " ; ";
 
-    int file = open(path, O_WRONLY | O_APPEND);
+    int file = open(log_path, O_WRONLY | O_APPEND);
 
     write(file, instant_s, strlen(instant_s));
     write(file, between, strlen(between));

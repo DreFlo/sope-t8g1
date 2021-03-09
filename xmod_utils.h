@@ -16,6 +16,10 @@
 #include <stdarg.h>
 #include "xmod_macros.h"
 
+extern char* log_path;
+extern clock_t begin;
+extern bool log_filename;
+
 /**
  * @brief Struct with accesses to change 
  */
@@ -115,15 +119,14 @@ void str_mode(mode_t mode, char * buf);
 
 /**
  * @brief Creates or cleans the file to store the execution registers
- * @param path environmental variable "LOG_FILENAME"
  * @return int 0 on success, non-zero otherwise
  */
-int start_log_file(char *path);
+int start_log_file();
 
 /**
  * @brief Writes execution register in file
  * @param argc number of arguments
- * @param ... Next three: File path, enum that represents the type of event that occured and time in which the main process started.
+ * @param ... Second argument: enum that represents the type of event that occured.
  *            Rest of arguments differ for each event.
  * @return int 
  */
