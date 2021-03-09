@@ -181,4 +181,10 @@ void xmod(const char * path, const mode_t new_mode, const mode_t old_mode, const
  */
 void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t old_mode, const flag_t flags);
 
+/**
+ * @brief Calls the exit() function and writes the execution register if needed
+ * @param status exit status
+ */
+void exit_plus(int status);
+
 #endif //_UTILS_H_

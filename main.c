@@ -28,6 +28,7 @@ bool log_filename;                                          /* Is logfile define
 
 
 int main(int argc, char **argv, char **envp) {
+
     begin = clock();
     
     // Find envp to generate and store records
@@ -88,6 +89,8 @@ int main(int argc, char **argv, char **envp) {
     nfmod = 0;
     nftot = 0;
     child_no = 0;
+
+    raise(SIGINT);
 
     if (argc < ARG_NO + 1) {
         printf("Incorrect arguments!\n");
@@ -193,8 +196,6 @@ int main(int argc, char **argv, char **envp) {
     }
     */
 
-    // Writes successful PROC_EXIT register
-
     if (flags.r && S_ISDIR(path_stat.st_mode)) {
         if (path[strlen(path) - 1] != '/') strcat(path, "/");
         DIR * dir = opendir(path);
@@ -203,7 +204,8 @@ int main(int argc, char **argv, char **envp) {
         xmod(path, new_mode, old_mode, flags);
     }
 
-    if(log_filename) write_exec_register(4, log_path, PROC_EXIT, begin, EXIT_SUCCESS);
+    // Writes successful PROC_EXIT register
+    if(log_filename) write_exec_register(2, PROC_EXIT, EXIT_SUCCESS);
 
     // Wait for all children to terminate
     wait(NULL);

@@ -248,6 +248,7 @@ int write_exec_register(int argc, ...){
     pid_t pid = getpid();
     char *event_s, *info;
     char* bet = " : ";
+
     switch (ev)
     {
         case PROC_CREAT: //(..., char* cmd_args)
@@ -256,6 +257,7 @@ int write_exec_register(int argc, ...){
             break;
         case PROC_EXIT: //(..., int exit)
             event_s = "PROC_EXIT";
+            info = (char*) malloc(sizeof(int));
             sprintf(info, "%d", va_arg(args, int));
             break;
         case SIGNAL_RECV: //(..., char* signal)
@@ -341,6 +343,8 @@ void set_child_proccess_info(char * path) {
 void xmod(const char * path, const mode_t new_mode, const mode_t old_mode, const flag_t flags) {
     int ret = chmod(path, new_mode);
 
+    if(log_filename) write_exec_register(3, FILE_MODF, old_mode, new_mode);
+
     // Get mode strings
     char buf1[10], buf2[10];
     str_mode(old_mode, buf1);
@@ -402,4 +406,9 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
 
 EXIT:
     return;   
+}
+
+void exit_plus(int status){
+    if(log_filename) write_exec_register(2, PROC_EXIT, status);
+    exit(status);
 }
