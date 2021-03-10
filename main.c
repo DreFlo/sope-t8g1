@@ -28,8 +28,12 @@ bool log_filename;                                          /* Is logfile define
 
 
 int main(int argc, char **argv, char **envp) {
+    main_proc = (mkfifo("/tmp/xmod_fifo", 0777) >= 0);
 
     begin = clock();
+
+    char * path = malloc(1024);
+    proc_start_path = malloc(1024);
     
     // Find envp to generate and store records
     for (int i = 0; envp[i] != NULL; i++){
@@ -37,7 +41,7 @@ int main(int argc, char **argv, char **envp) {
             log_path = envp[i];
             if (start_log_file() != 0){
                 printf("Incorrect path in LOG_FILENAME envp!\n");
-                exit(EXIT_FAILURE);
+                exit_plus(EXIT_FAILURE);
             }
             log_filename = true;
             break;
@@ -83,29 +87,26 @@ int main(int argc, char **argv, char **envp) {
 
     //--------------------
 
-    main_proc = true;
     proc_id = getpid();
-    proc_start_path = argv[argc - 1];
+    memcpy(proc_start_path, argv[argc - 1], strlen(argv[argc - 1]) + 1);
     nfmod = 0;
     nftot = 0;
-    child_no = 0;
-
-    raise(SIGINT);
+    child_no = 0;    
 
     if (argc < ARG_NO + 1) {
         printf("Incorrect arguments!\n");
-        exit(EXIT_FAILURE);
+        exit_plus(EXIT_FAILURE);
     }
 
-    mode_t old_mode, new_mode;                              /* File permission info struct */
-    struct stat path_stat;                                  /* Initial status of the argument path */
-    char *path = argv[argc - 1];                            /* Path specified in command line arguments */
-    flag_t flags = {false, false, false};                   /* Command line options flags */
+    mode_t old_mode, new_mode;                                  /* File permission info struct */
+    struct stat path_stat;                                      /* Initial status of the argument path */
+    memcpy(path, argv[argc - 1], strlen(argv[argc - 1]) + 1);   /* Path specified in command line arguments */
+    flag_t flags = {false, false, false};                       /* Command line options flags */
 
     // Load current path status into path_stat
     if (stat(path, &path_stat)) {
         perror("stat");
-        exit(EXIT_FAILURE);
+        exit_plus(EXIT_FAILURE);
     }
 
     // Store current path permission mode
@@ -115,9 +116,9 @@ int main(int argc, char **argv, char **envp) {
     memset(&new_mode, 0, sizeof(mode_t));
 
     // Store new mode specified by command line arguments (either OCTAL-MODE or MODE) 
-    if (sscanf(argv[argc - 2], "%o", &new_mode) != 1 && get_mode_from_string(argv[argc - 2], &new_mode, old_mode)) {
+    if ((argv[argc - 2][0] != '0' || sscanf(argv[argc - 2], "%o", &new_mode) != 1) && get_mode_from_string(argv[argc - 2], &new_mode, old_mode)) {
         printf("Error mode\n");
-        exit(EXIT_FAILURE);
+        exit_plus(EXIT_FAILURE);
     }
 
     // Set flags from command line options
@@ -129,72 +130,9 @@ int main(int argc, char **argv, char **envp) {
         else if (strcmp(str, "-R") == 0) flags.r = true;
         else {
             printf("%s is not a specified argument\n", str);
-            exit(EXIT_FAILURE);
+            exit_plus(EXIT_FAILURE);
         }
     }
-
-    // For tests with more than one process
-    /*
-    int id = fork();
-
-    switch (id)
-    {
-    case -1:
-        exit(1);
-    case 0:
-        main_proc = false;
-        proc_id = getpid();
-        proc_start_path = "Child";
-        nfmod = 0;
-        nftot = 0;
-        pause();
-        exit(0);
-    default:
-        raise(SIGINT);
-        break;
-    }
-    */
-
-   /*
-    // Change permissions
-    if (chmod(path, new_mode)) {
-        perror("chmod");
-        exit(EXIT_FAILURE);
-    }
-
-    // Writes FILE_MODF register
-    if(log_filename) write_exec_register(3, FILE_MODF, old_mode, new_mode);
-
-    // Get mode strings
-    char buf1[10], buf2[10];
-    str_mode(old_mode, buf1);
-    str_mode(new_mode, buf2);
-    
-    // Print messages if flags are set
-
-    if ((flags.v || flags.c) && new_mode != old_mode) {
-        printf("mode of '%s' changed from %.4o ('%s') to %.4o ('%s')\n", path, old_mode, buf1, new_mode, buf2);
-    }
-
-    else if ((flags.v && !flags.c) && new_mode == old_mode) {
-        printf("mode of '%s' retained as %.4o ('%s')\n", path, new_mode, buf1);
-    }
-
-    // -----------end message printing
-
-    /*
-    switch (is_directory(argv[1])) {
-        case -1:
-            printf("Not a valid file or directory path\n");
-            break;
-        case 0:
-            printf("-\n");
-            break;
-        default:
-            printf("d\n");
-            break;
-    }
-    */
 
     if (flags.r && S_ISDIR(path_stat.st_mode)) {
         if (path[strlen(path) - 1] != '/') strcat(path, "/");
@@ -204,10 +142,5 @@ int main(int argc, char **argv, char **envp) {
         xmod(path, new_mode, old_mode, flags);
     }
 
-    // Writes successful PROC_EXIT register
-    if(log_filename) write_exec_register(2, PROC_EXIT, EXIT_SUCCESS);
-
-    // Wait for all children to terminate
-    wait(NULL);
-    return 0;
+    exit_plus(EXIT_SUCCESS);
 }

@@ -1,4 +1,5 @@
 #include "xmod_utils.h"
+#include <signal.h>
 
 mode_t bitmask_permission(enum file_class c, enum file_permission p) {
     return 1 << ((2 - p) + (2 - c) * 3);
@@ -331,15 +332,6 @@ void register_new_child(pid_t pid) {
     child_no++;
 }
 
-void set_child_proccess_info(char * path) {
-    main_proc = false;
-    proc_id = getpid();
-    proc_start_path = path;
-    nftot = 0;
-    nfmod = 0;
-    child_no = 0;
-}
-
 void xmod(const char * path, const mode_t new_mode, const mode_t old_mode, const flag_t flags) {
     int ret = chmod(path, new_mode);
 
@@ -386,10 +378,10 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
             {
             case -1:
                 perror("fork:");
-                exit(EXIT_FAILURE);
+                exit_plus(EXIT_FAILURE);
             case 0:
                 strcat(new_path, "/");
-                set_child_proccess_info(new_path);
+                //set_child_proccess_info(new_path);
                 DIR * new_dir = opendir(new_path);
                 recursive_xmod(new_path, new_dir, new_mode, old_mode, flags);
                 goto EXIT;
@@ -405,10 +397,13 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
     }
 
 EXIT:
+    if(main_proc) raise(SIGINT);
     return;   
 }
 
 void exit_plus(int status){
+    wait(NULL);
     if(log_filename) write_exec_register(2, PROC_EXIT, status);
+    if (main_proc) unlink("/tmp/xmod_fifo");
     exit(status);
 }

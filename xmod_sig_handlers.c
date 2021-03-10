@@ -22,7 +22,7 @@ void sigint_handler() {
         do
         {
             printf("Would you like to terminate? [Y/n] ");
-            ans = getchar();
+            scanf("%c", &ans);
         } while (ans != 'Y' && ans != 'n');
 
         switch (ans) {
@@ -46,7 +46,7 @@ void sigquit_handler() {
     if (log_filename) write_exec_register(2, SIGNAL_RECV, "SIGQUIT");
     if (!main_proc) kill_all_children(SIGQUIT);
     wait(NULL);
-    exit(1);
+    exit_plus(1);
 }
 
 void sigcont_handler() {
