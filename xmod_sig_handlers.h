@@ -1,5 +1,5 @@
-#ifndef _SIG_HANDLERS_H_
-#define _SIG_HANDLERS_H_
+#ifndef XMOD_SIG_HANDLERS_H_
+#define XMOD_SIG_HANDLERS_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -51,4 +51,4 @@ void sigquit_handler();
  */
 void sigcont_handler();
 
-#endif //_SIG_HANDLERS_H_
+#endif // XMOD_SIG_HANDLERS_H_

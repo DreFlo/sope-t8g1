@@ -372,7 +372,7 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
 
         // get current path
         memcpy(new_path, path, strlen(path) + 1);
-        strcat(new_path, dir_struct->d_name);
+        strncat(new_path, dir_struct->d_name, strlen(dir_struct->d_name));
 
         // get current path status
         stat(new_path, &path_stat);

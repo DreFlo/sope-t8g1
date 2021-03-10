@@ -1,5 +1,5 @@
-#ifndef _UTILS_H_
-#define _UTILS_H_
+#ifndef XMOD_UTILS_H_
+#define XMOD_UTILS_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -192,4 +192,4 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
  */
 void exit_plus(int status);
 
-#endif //_UTILS_H_
+#endif // XMOD_UTILS_H_
