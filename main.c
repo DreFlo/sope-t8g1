@@ -26,14 +26,26 @@ char *log_path;                                             /* Logfile path */
 clock_t begin;                                              /* beggining time of the program */
 bool log_filename;                                          /* Is logfile defined or not */
 
+int s_argc;                                                 /* Number of command line arguments */
+char ** s_argv;                                             /* Pointer to command line arguments */
+char ** s_envp;                                             /* Pointer to environment variables */
+
 
 int main(int argc, char **argv, char **envp) {
-    main_proc = (mkfifo("/tmp/xmod_fifo", 0777) >= 0);
+    // Determine if it is main process by trying to create named pipe
+    main_proc = (mkfifo(NAMED_PIPE_NAME, ALLPERMS) >= 0);
 
+    // Store beginning time of program
     begin = clock();
 
-    char * path = malloc(1024);
+    // Allocate memory
+    char * path = malloc(1024);                              /* Path specified in command line arguments */
     proc_start_path = malloc(1024);
+
+    // Store main() arguments statically
+    s_argc = argc;
+    s_argv = argv;
+    s_envp = envp;
     
     // Find envp to generate and store records
     for (int i = 0; envp[i] != NULL; i++){
@@ -99,9 +111,9 @@ int main(int argc, char **argv, char **envp) {
     }
 
     mode_t old_mode, new_mode;                                  /* File permission info struct */
-    struct stat path_stat;                                      /* Initial status of the argument path */
-    memcpy(path, argv[argc - 1], strlen(argv[argc - 1]) + 1);   /* Path specified in command line arguments */
+    struct stat path_stat;                                      /* Initial status of the argument path */ 
     flag_t flags = {false, false, false};                       /* Command line options flags */
+    memcpy(path, argv[argc - 1], strlen(argv[argc - 1]) + 1);  
 
     // Load current path status into path_stat
     if (stat(path, &path_stat)) {
@@ -134,6 +146,7 @@ int main(int argc, char **argv, char **envp) {
         }
     }
 
+    // If -R and is directory do recursively, else change mode
     if (flags.r && S_ISDIR(path_stat.st_mode)) {
         if (path[strlen(path) - 1] != '/') strcat(path, "/");
         DIR * dir = opendir(path);
@@ -141,6 +154,9 @@ int main(int argc, char **argv, char **envp) {
     } else {
         xmod(path, new_mode, old_mode, flags);
     }
+
+    free(path);
+    free(proc_start_path);
 
     exit_plus(EXIT_SUCCESS);
 }

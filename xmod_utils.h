@@ -30,6 +30,10 @@ extern char* log_path;
 extern clock_t begin;
 extern bool log_filename;
 
+extern int s_argc;
+extern char ** s_argv;
+extern char ** s_envp;
+
 /**
  * @brief Struct with user settable flags
  */

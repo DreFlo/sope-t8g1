@@ -333,7 +333,11 @@ void register_new_child(pid_t pid) {
 }
 
 void xmod(const char * path, const mode_t new_mode, const mode_t old_mode, const flag_t flags) {
+    nftot++;
+
     int ret = chmod(path, new_mode);
+
+    nfmod++;
 
     if(log_filename) write_exec_register(3, FILE_MODF, old_mode, new_mode);
 
@@ -373,6 +377,7 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
         // get current path status
         stat(new_path, &path_stat);
 
+        // if dĩrectory change modes in new process, else change mode
         if (S_ISDIR(path_stat.st_mode)) {
             switch (id = fork())
             {
@@ -380,13 +385,11 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
                 perror("fork:");
                 exit_plus(EXIT_FAILURE);
             case 0:
-                strcat(new_path, "/");
-                //set_child_proccess_info(new_path);
-                DIR * new_dir = opendir(new_path);
-                recursive_xmod(new_path, new_dir, new_mode, old_mode, flags);
-                goto EXIT;
+                s_argv[s_argc - 1] = new_path;
+                execve(PROGRAM_NAME, s_argv, s_envp);
             default:
                 register_new_child(id);
+                nftot++;
                 break;
             }
             
@@ -395,15 +398,12 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
             xmod(new_path, new_mode, old_mode, flags);
         }
     }
-
-EXIT:
-    if(main_proc) raise(SIGINT);
     return;   
 }
 
 void exit_plus(int status){
     wait(NULL);
     if(log_filename) write_exec_register(2, PROC_EXIT, status);
-    if (main_proc) unlink("/tmp/xmod_fifo");
+    if (main_proc) unlink(NAMED_PIPE_NAME);
     exit(status);
 }

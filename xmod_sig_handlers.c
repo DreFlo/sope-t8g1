@@ -27,12 +27,10 @@ void sigint_handler() {
 
         switch (ans) {
         case 'Y':
-            kill_all_children(SIGQUIT);
             if (log_filename) write_exec_register(3, SIGNAL_SENT, "SIGQUIT", proc_id);
             raise(SIGQUIT);
             break;
         case 'n':
-            kill_all_children(SIGCONT);
             if (log_filename) write_exec_register(3, SIGNAL_SENT, "SIGCONT", proc_id);
             raise(SIGCONT);
             break;
@@ -44,13 +42,13 @@ void sigint_handler() {
 
 void sigquit_handler() {
     if (log_filename) write_exec_register(2, SIGNAL_RECV, "SIGQUIT");
-    if (!main_proc) kill_all_children(SIGQUIT);
+    kill_all_children(SIGQUIT);
     wait(NULL);
     exit_plus(1);
 }
 
 void sigcont_handler() {
     if (log_filename) write_exec_register(2, SIGNAL_RECV, "SIGCONT");
-    if (!main_proc) kill_all_children(SIGCONT);
+    kill_all_children(SIGCONT);
     return;
 }
