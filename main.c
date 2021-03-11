@@ -154,9 +154,12 @@ int main(int argc, char **argv, char **envp) {
 
     // If -R and is directory do recursively, else change mode
     if (flags.r && S_ISDIR(path_stat.st_mode)) {
+        // change path permissions
+        xmod(path, new_mode, old_mode, flags);
+        DIR * dir;
         if (path[strlen(path) - 1] != '/') strncat(path, "/", 2);
-        DIR * dir = opendir(path);
-        recursive_xmod(path, dir, new_mode, old_mode, flags);
+        if ((dir = opendir(path)) != NULL) recursive_xmod(path, dir, new_mode, old_mode, flags);
+        else perror("xmod");
     } else {
         xmod(path, new_mode, old_mode, flags);
     }

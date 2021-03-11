@@ -382,9 +382,6 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
     struct stat path_stat;                          /* Status of new_path */
     pid_t id;                                       /* For multi-proccessing */
 
-    // change path permissions
-    xmod(path, new_mode, old_mode, flags);
-
     while ((dir_struct = readdir(dir)) != NULL) {
         // ignore current folder and parent folder
         if (!strcmp(dir_struct->d_name, ".") || !strcmp(dir_struct->d_name, "..")) continue;
