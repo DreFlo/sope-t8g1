@@ -30,8 +30,40 @@ int s_argc;                                                 /* Number of command
 char ** s_argv;                                             /* Pointer to command line arguments */
 char ** s_envp;                                             /* Pointer to environment variables */
 
+char * msg;                                                 /* Message to be printed on the screen when interrupted */
+
 
 int main(int argc, char **argv, char **envp) {
+    struct sigaction new;                                   /* sigaction struct for signal beahviour */
+    sigset_t smask;                                         /* smask for signal behaviour */
+
+    // Set sig handlers
+
+    // SIGINT
+    if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
+    new.sa_handler = sigint_handler;
+    new.sa_mask = smask;
+    new.sa_flags = 0;
+    if (sigaction(SIGINT, &new, NULL) == -1) perror("sigaction");
+
+    // SIGQUIT
+    if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
+    new.sa_handler = sigquit_handler;
+    new.sa_mask = smask;
+    new.sa_flags = 0;
+    if (sigaction(SIGQUIT, &new, NULL) == -1) perror("sigaction");
+
+    // SIGCONT
+    if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
+    new.sa_handler = sigcont_handler;
+    new.sa_mask = smask;
+    new.sa_flags = 0;
+    if (sigaction(SIGCONT, &new, NULL) == -1) perror("sigaction");
+
+    //--------------------
+
+    msg = malloc(1024);
+
     // Determine if it is main process by trying to create named pipe
     main_proc = (mkfifo(NAMED_PIPE_NAME, ALLPERMS) >= 0);
 
@@ -42,10 +74,14 @@ int main(int argc, char **argv, char **envp) {
     char * path = malloc(1024);                              /* Path specified in command line arguments */
     proc_start_path = malloc(1024);
 
+    memcpy(path, argv[argc - 1], strlen(argv[argc - 1]) + 1);
+    memcpy(proc_start_path, path, strlen(path) + 1);
+
     // Store main() arguments statically
     s_argc = argc;
     s_argv = argv;
     s_envp = envp;
+
     // Find envp to generate and store records
     for (int i = 0; envp[i] != NULL; i++){
         if(strstr(envp[i], "LOG_FILENAME") != NULL){
@@ -76,34 +112,6 @@ int main(int argc, char **argv, char **envp) {
         write_exec_register(2, PROC_CREAT, arg);
     }
 
-    struct sigaction new;                                   /* sigaction struct for signal beahviour */
-    sigset_t smask;                                         /* smask for signal behaviour */
-
-    // Set sig handlers
-
-    // SIGINT
-    if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
-    new.sa_handler = sigint_handler;
-    new.sa_mask = smask;
-    new.sa_flags = 0;
-    if (sigaction(SIGINT, &new, NULL) == -1) perror("sigaction");
-
-    // SIGQUIT
-    if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
-    new.sa_handler = sigquit_handler;
-    new.sa_mask = smask;
-    new.sa_flags = 0;
-    if (sigaction(SIGQUIT, &new, NULL) == -1) perror("sigaction");
-
-    // SIGCONT
-    if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
-    new.sa_handler = sigcont_handler;
-    new.sa_mask = smask;
-    new.sa_flags = 0;
-    if (sigaction(SIGCONT, &new, NULL) == -1) perror("sigaction");
-
-    //--------------------
-
     if (argc < ARG_NO + 1) {
         printf("Incorrect arguments!\n");
         exit_plus(EXIT_FAILURE);
@@ -117,9 +125,6 @@ int main(int argc, char **argv, char **envp) {
     mode_t old_mode, new_mode;                                  /* File permission info struct */
     struct stat path_stat;                                      /* Initial status of the argument path */ 
     flag_t flags = {false, false, false};                       /* Command line options flags */
-    
-    memcpy(path, argv[argc - 1], strlen(argv[argc - 1]) + 1);
-    memcpy(proc_start_path, path, strlen(path) + 1);
 
     // Load current path status into path_stat
     if (stat(path, &path_stat)) {

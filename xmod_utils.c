@@ -352,6 +352,8 @@ void register_new_child(pid_t pid) {
 }
 
 void xmod(const char * path, const mode_t new_mode, const mode_t old_mode, const flag_t flags) {
+    
+
     nftot++;
 
     int ret = chmod(path, new_mode);
@@ -399,7 +401,9 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
             case -1:
                 perror("fork:");
                 exit_plus(EXIT_FAILURE);
-            case 0:
+            case 0:;
+                struct timespec t = {0, 100000000};
+                nanosleep(&t, NULL);
                 s_argv[s_argc - 1] = new_path;
                 execve(PROGRAM_NAME, s_argv, s_envp);
             default:
@@ -433,7 +437,10 @@ int kill_all_children(int sig) {
 
 void wait_all_children() {
     for (int i = 0; i < child_no; i++) {
-        waitpid(children[i], NULL, 0);
+        if (waitpid(children[i], NULL, 0) == -1 && errno == EINTR) {
+            wait_all_children();
+            break;
+        }
     }
 }
 

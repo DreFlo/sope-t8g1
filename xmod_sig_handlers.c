@@ -3,14 +3,15 @@
 void sigint_handler() {
     if (log_filename) write_exec_register(2, SIGNAL_RECV, "SIGINT");
     char ans;
-    printf("%d ; %s ; %u ; %u\n", proc_id, proc_start_path, nftot, nfmod);
+    snprintf(msg, 1024, "%d ; %s ; %u ; %u\n", proc_id, proc_start_path, nftot, nfmod);
+    write(STDOUT_FILENO, msg, strlen(msg) + 1);
     //kill_all_children(SIGINT);
     if (main_proc) {
         sleep(1);
         do
         {
-            printf("Would you like to terminate? [Y/n] ");
-            scanf("%c", &ans);
+            write(STDOUT_FILENO, "Would you like to terminate? [Y/n] ", 36);
+            read(STDIN_FILENO, &ans, 1);
         } while (ans != 'Y' && ans != 'n');
 
         switch (ans) {
@@ -26,6 +27,7 @@ void sigint_handler() {
     } else {
         pause();
     }
+    return;
 }
 
 void sigquit_handler() {
