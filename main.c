@@ -19,7 +19,7 @@ char * proc_start_path;                                     /* Path the process 
 unsigned int nftot;                                         /* Total number of files found */
 unsigned int nfmod;                                         /* Total number of files modified */
 
-pid_t children[128];                                        /* Array containing the pids of all the children of the process */
+pid_t children[256];                                        /* Array containing the pids of all the children of the process */
 int child_no;                                               /* Number of child processes */
 
 char *log_path;                                             /* Logfile path */
@@ -52,7 +52,6 @@ int main(int argc, char **argv, char **envp) {
             log_path = (char*) malloc(strlen(envp[i]) * sizeof(char));
             strcpy(log_path, envp[i]);
             if (main_proc){
-                printf("MAIN\n");
                 if (start_log_file() != 0){
                     printf("Incorrect path in LOG_FILENAME envp!\n");
                     exit_plus(EXIT_FAILURE);
@@ -105,21 +104,22 @@ int main(int argc, char **argv, char **envp) {
 
     //--------------------
 
-    proc_id = getpid();
-    memcpy(proc_start_path, argv[argc - 1], strlen(argv[argc - 1]) + 1);
-    nfmod = 0;
-    nftot = 0;
-    child_no = 0;    
-
     if (argc < ARG_NO + 1) {
         printf("Incorrect arguments!\n");
         exit_plus(EXIT_FAILURE);
     }
 
+    proc_id = getpid();
+    nfmod = 0;
+    nftot = 0;
+    child_no = 0;
+
     mode_t old_mode, new_mode;                                  /* File permission info struct */
     struct stat path_stat;                                      /* Initial status of the argument path */ 
     flag_t flags = {false, false, false};                       /* Command line options flags */
+    
     memcpy(path, argv[argc - 1], strlen(argv[argc - 1]) + 1);
+    memcpy(proc_start_path, path, strlen(path) + 1);
 
     // Load current path status into path_stat
     if (stat(path, &path_stat)) {
@@ -154,7 +154,7 @@ int main(int argc, char **argv, char **envp) {
 
     // If -R and is directory do recursively, else change mode
     if (flags.r && S_ISDIR(path_stat.st_mode)) {
-        if (path[strlen(path) - 1] != '/') strcat(path, "/");
+        if (path[strlen(path) - 1] != '/') strncat(path, "/", 2);
         DIR * dir = opendir(path);
         recursive_xmod(path, dir, new_mode, old_mode, flags);
     } else {

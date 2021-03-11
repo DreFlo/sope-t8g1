@@ -19,4 +19,4 @@ xmod_sig_handlers.o: xmod_sig_handlers.c xmod_sig_handlers.h xmod_macros.h
 	gcc -c xmod_sig_handlers.c
 
 clean:
-	$(RM) $(TARGET)
+	$(RM) $(TARGET) *.o

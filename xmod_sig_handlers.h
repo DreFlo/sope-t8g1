@@ -22,19 +22,12 @@ extern char * proc_start_path;
 extern unsigned int nftot;
 extern unsigned int nfmod;
 
-extern pid_t children[128];
+extern pid_t children[256];
 extern int child_no;
 
 extern char* log_path;
 extern clock_t begin;
 extern bool log_filename;
-
-/**
- * @brief Kills all children of this process
- * @param sig signal to kill with
- * @return 0 on success (at least one children killed), 1 otherwise
- */
-int kill_all_children(int sig);
 
 /**
  * @brief Handler for SIGINT signals 

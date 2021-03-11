@@ -23,7 +23,7 @@ extern char * proc_start_path;
 extern unsigned int nftot;
 extern unsigned int nfmod;
 
-extern pid_t children[128];
+extern pid_t children[256];
 extern int child_no;
 
 extern char* log_path;
@@ -103,7 +103,7 @@ bool check_permission(mode_t m, enum file_class c, enum file_permission p);
 mode_t add_permission(mode_t m, enum file_class c, enum file_permission p);
 
 /**
- * @brief Subtracts a permission [NOT IMPLEMENTED]
+ * @brief Subtracts a permission
  * @param m mode to set
  * @param c class permission to check
  * @param p permission to check
@@ -191,6 +191,18 @@ void xmod(const char * path, const mode_t new_mode, const mode_t old_mode, const
  * @param flags user set flags 
  */
 void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t old_mode, const flag_t flags);
+
+/**
+ * @brief Kills all children of this process
+ * @param sig signal to kill with
+ * @return 0 on success (at least one children killed), 1 otherwise
+ */
+int kill_all_children(int sig);
+
+/**
+ * @brief Waits for all child processes to terminate 
+ */
+void wait_all_children();
 
 /**
  * @brief Calls the exit() function and writes the execution register if needed

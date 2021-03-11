@@ -390,8 +390,7 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
         if (!strcmp(dir_struct->d_name, ".") || !strcmp(dir_struct->d_name, "..")) continue;
 
         // get current path
-        memcpy(new_path, path, strlen(path) + 1);
-        strncat(new_path, dir_struct->d_name, strlen(dir_struct->d_name));
+        snprintf(new_path, strlen(path) + strlen(dir_struct->d_name) + 1, "%s%s", path, dir_struct->d_name);
 
         // get current path status
         stat(new_path, &path_stat);
@@ -420,8 +419,30 @@ void recursive_xmod(char * path, DIR * dir, const mode_t new_mode, const mode_t 
     return;   
 }
 
+int kill_all_children(int sig) {
+    if (child_no != 0) {
+        int ret = 1;
+        for (int i = 0; i < child_no; i++) {
+            if (kill(children[i], sig) == 0) {
+                ret = 0;
+            }
+            if (log_filename) write_exec_register(3, SIGNAL_SENT, "SIGINT", children[i]);
+            
+        }
+        return ret;
+    }
+    return 0;
+}
+
+void wait_all_children() {
+    for (int i = 0; i < child_no; i++) {
+        waitpid(children[i], NULL, 0);
+    }
+}
+
 void exit_plus(int status){
-    wait(NULL);
+    //if(main_proc) raise(SIGINT);
+    wait_all_children();
     if(log_filename) write_exec_register(2, PROC_EXIT, status);
     if (main_proc) unlink(NAMED_PIPE_NAME);
     exit(status);

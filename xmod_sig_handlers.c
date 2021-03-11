@@ -1,22 +1,10 @@
 #include "xmod_sig_handlers.h"
 
-int kill_all_children(int sig) {
-    int ret = 1;
-    for (int i = 0; i < child_no; i++) {
-        if (kill(children[i], sig) == 0) {
-            ret = 0;
-        }
-        if (log_filename) write_exec_register(3, SIGNAL_SENT, "SIGINT", children[i]);
-        
-    }
-    return ret;
-}
-
 void sigint_handler() {
     if (log_filename) write_exec_register(2, SIGNAL_RECV, "SIGINT");
     char ans;
     printf("%d ; %s ; %u ; %u\n", proc_id, proc_start_path, nftot, nfmod);
-    kill_all_children(SIGINT);
+    //kill_all_children(SIGINT);
     if (main_proc) {
         sleep(1);
         do
@@ -43,7 +31,6 @@ void sigint_handler() {
 void sigquit_handler() {
     if (log_filename) write_exec_register(2, SIGNAL_RECV, "SIGQUIT");
     kill_all_children(SIGQUIT);
-    wait(NULL);
     exit_plus(1);
 }
 
