@@ -196,13 +196,17 @@ void str_mode(mode_t mode, char * buf) {
   buf[9] = '\0';
 }
 
-int start_log_file(){
-    for(size_t i = 0; i < strlen(log_path); i++){
-        if(log_path[i] == '='){
-            memmove(log_path, log_path + i + 1, strlen(log_path) - i);
-            break;
+void rem_beg_envp(char* envp){
+    for(size_t i = 0; i < strlen(envp); i++){
+        if(envp[i] == '='){
+            memmove(envp, envp + i + 1, strlen(envp) - i);
+            return;
         }
     }
+}
+
+int start_log_file(){
+    rem_beg_envp(log_path);
 
     char* folder_path = (char*) malloc(strlen(log_path));
     char* file_path = (char*) malloc(strlen(log_path) + 4*sizeof(char));
@@ -225,13 +229,15 @@ int start_log_file(){
         case 0:;
             break;
         default:;
+            /**
             char* file_name = (char*) malloc(strlen(log_path));
             file_name = "logs";
             if(log_path[strlen(log_path) - 1] != '/'){
                 char* add = "/";
                 strcat(log_path, add);
             }
-            strcat(log_path, file_name);
+            strcat(log_path, file_name);*/
+            return -1;
     }
 
     int file = open(log_path, O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IXUSR);
@@ -246,39 +252,43 @@ int write_exec_register(int argc, ...){
 
     enum event ev = va_arg(args, enum event);
 
-    pid_t pid = getpid();
-    char *event_s, *info;
-    char* bet = " : ";
+    char *event_s;
+    char info[100];
+    //char* bet = " : ";
 
     switch (ev)
     {
         case PROC_CREAT: //(..., char* cmd_args)
             event_s = "PROC_CREAT";
-            info = va_arg(args, char*);
+            //info = va_arg(args, char*);
+            snprintf(info, 100, "%s", va_arg(args, char*));
             break;
         case PROC_EXIT: //(..., int exit)
             event_s = "PROC_EXIT";
-            info = (char*) malloc(sizeof(int));
-            sprintf(info, "%d", va_arg(args, int));
+            /**info = (char*) malloc(sizeof(int));
+            sprintf(info, "%d", va_arg(args, int));*/
+            snprintf(info, 100, "%d", va_arg(args, int));
             break;
         case SIGNAL_RECV: //(..., char* signal)
             event_s = "SIGNAL_RECV";
-            info = va_arg(args, char*);
+            //info = va_arg(args, char*);
+            snprintf(info, 100, "%s", va_arg(args, char*));
             break;
-        case SIGNAL_SENT: //(..., char*signal, pid_t pid)
+        case SIGNAL_SENT: //(..., char* signal, pid_t pid)
             event_s = "SIGNAL_SENT";
-            char* signal = va_arg(args, char*);
+            /**char* signal = va_arg(args, char*);
             pid_t target_pid = va_arg(args, pid_t);
             char* target_pid_s = (char*) malloc(sizeof(target_pid_s));
             sprintf(target_pid_s, "%i", target_pid);
             info = (char*) malloc(sizeof(signal) + sizeof(target_pid_s) + sizeof(bet));
             memmove(info, signal, strlen(signal));
             strncat(info, bet, strlen(bet));
-            strncat(info, target_pid_s, strlen(target_pid_s));
+            strncat(info, target_pid_s, strlen(target_pid_s));*/
+            snprintf(info, 100, "%s : %d", va_arg(args, char*), va_arg(args, pid_t));
             break;
-        case FILE_MODF: //(..., mode_t old, mode_t new)
+        case FILE_MODF: //(..., char* path, mode_t old, mode_t new)
             event_s = "FILE_MODF";
-            char *zero = "0";
+            /**char *zero = "0";
             mode_t old = va_arg(args, mode_t);
             mode_t new = va_arg(args, mode_t);
             char* old_s = (char*) malloc(4 * sizeof(mode_t));
@@ -291,35 +301,44 @@ int write_exec_register(int argc, ...){
             strncat(old_s, old_s1, strlen(old_s1));
             strncat(new_s, zero, strlen(zero));
             strncat(new_s, new_s1, strlen(new_s1));
-            info = (char*) malloc(sizeof(char) * strlen(log_path) + 15*sizeof(char));
-            memmove(info, log_path, strlen(log_path));
+            info = (char*) malloc(sizeof(char) * strlen(s_argv[(s_argc - 1)]) + 15*sizeof(char));
+            memmove(info, s_argv[(s_argc - 1)], strlen(s_argv[(s_argc - 1)]));
             strncat(info, bet, strlen(bet));
             strncat(info, old_s, strlen(old_s));
             strncat(info, bet, strlen(bet));
-            strncat(info, new_s, strlen(new_s));
+            strncat(info, new_s, strlen(new_s));*/
+            
+            char* path = va_arg(args, char*);
+
+            snprintf(info, 100, "%s : 0%o : 0%o", path, va_arg(args, mode_t), va_arg(args, mode_t));
             break;
     }
-    char *pid_s = (char*) malloc(sizeof(int));
+    /**char *pid_s = (char*) malloc(sizeof(int));
     sprintf(pid_s, "%d", pid);
 
     char *ms = "ms";
-    char *instant_s = (char*) malloc(sizeof(double) + strlen(ms));
+    char *instant_s = (char*) malloc(sizeof(double) + strlen(ms));*/
     double instant = (double)(clock() - begin) / 1000;
-    sprintf(instant_s, "%f", instant);
+    /**sprintf(instant_s, "%f", instant);
     strncat(instant_s, ms, strlen(ms));
-    
-    char *between = " ; ";
+
+    char *between = " ; ";*/
+
+    char line[sizeof(info) + 100];
+
+    snprintf(line, sizeof(info) + 100, "%d ; %fms ; %s ; %s\n", getpid(), instant, event_s, info);
 
     int file = open(log_path, O_WRONLY | O_APPEND);
 
-    write(file, instant_s, strlen(instant_s));
+    /**write(file, instant_s, strlen(instant_s));
     write(file, between, strlen(between));
     write(file, pid_s, strlen(pid_s));
     write(file, between, strlen(between));
     write(file, event_s, strlen(event_s));
     write(file, between, strlen(between));
     write(file, info, strlen(info));
-    write(file, "\n", strlen("\n"));
+    write(file, "\n", strlen("\n"));*/
+    write(file, line, strlen(line));
     
     close(file);
     
@@ -339,7 +358,7 @@ void xmod(const char * path, const mode_t new_mode, const mode_t old_mode, const
 
     nfmod++;
 
-    if(log_filename) write_exec_register(3, FILE_MODF, old_mode, new_mode);
+    if(log_filename) write_exec_register(4, FILE_MODF, path, old_mode, new_mode);
 
     // Get mode strings
     char buf1[10], buf2[10];

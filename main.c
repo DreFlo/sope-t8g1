@@ -46,14 +46,20 @@ int main(int argc, char **argv, char **envp) {
     s_argc = argc;
     s_argv = argv;
     s_envp = envp;
-    
     // Find envp to generate and store records
     for (int i = 0; envp[i] != NULL; i++){
         if(strstr(envp[i], "LOG_FILENAME") != NULL){
-            log_path = envp[i];
-            if (start_log_file() != 0){
-                printf("Incorrect path in LOG_FILENAME envp!\n");
-                exit_plus(EXIT_FAILURE);
+            log_path = (char*) malloc(strlen(envp[i]) * sizeof(char));
+            strcpy(log_path, envp[i]);
+            if (main_proc){
+                printf("MAIN\n");
+                if (start_log_file() != 0){
+                    printf("Incorrect path in LOG_FILENAME envp!\n");
+                    exit_plus(EXIT_FAILURE);
+                }
+            }
+            else{
+                rem_beg_envp(log_path);
             }
             log_filename = true;
             break;
@@ -113,7 +119,7 @@ int main(int argc, char **argv, char **envp) {
     mode_t old_mode, new_mode;                                  /* File permission info struct */
     struct stat path_stat;                                      /* Initial status of the argument path */ 
     flag_t flags = {false, false, false};                       /* Command line options flags */
-    memcpy(path, argv[argc - 1], strlen(argv[argc - 1]) + 1);  
+    memcpy(path, argv[argc - 1], strlen(argv[argc - 1]) + 1);
 
     // Load current path status into path_stat
     if (stat(path, &path_stat)) {
