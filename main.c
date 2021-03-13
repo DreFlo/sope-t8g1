@@ -32,10 +32,13 @@ char ** s_envp;                                             /* Pointer to enviro
 
 char * msg;                                                 /* Message to be printed on the screen when interrupted */
 
+sem_t *semaphore;                                           /* Pointer to sempaphore for writing registers synchronization */
 
 int main(int argc, char **argv, char **envp) {
     struct sigaction new;                                   /* sigaction struct for signal beahviour */
     sigset_t smask;                                         /* smask for signal behaviour */
+
+    semaphore = sem_open("/semaphore", O_CREAT, 0777, 1);
 
     // Set sig handlers
 

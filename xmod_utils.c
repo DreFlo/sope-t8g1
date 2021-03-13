@@ -247,6 +247,8 @@ int start_log_file(){
 }
 
 int write_exec_register(int argc, ...){
+    sem_wait(semaphore);
+
     va_list args;
     va_start(args, argc);
 
@@ -296,18 +298,17 @@ int write_exec_register(int argc, ...){
 
     char line[strlen(info) * sizeof(char) + 100];
 
-    snprintf(line, strlen(info) * sizeof(char) + 100, "%d ; %fms ; %s ; %s", getpid(), instant, event_s, info);
+    snprintf(line, strlen(info) * sizeof(char) + 100, "%d ; %fms ; %s ; %s\n", getpid(), instant, event_s, info);
 
     int file = open(log_path, O_WRONLY | O_APPEND);
 
     write(file, line, strlen(line));
-    write(file, " \n", 2);
-    
-
 
     close(file);
     
     va_end(args);
+
+    sem_post(semaphore);
     return 0;
 }
 
@@ -414,5 +415,9 @@ void exit_plus(int status){
     wait_all_children();
     if(log_filename) write_exec_register(2, PROC_EXIT, status);
     if (main_proc) unlink(NAMED_PIPE_NAME);
+
+    sem_close(semaphore);
+    if(main_proc) sem_unlink("/semaphore");
+
     exit(status);
 }

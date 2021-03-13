@@ -4,10 +4,12 @@ CFLAGS = -g -Wall
 
 TARGET = xmod
 
+LIBS = -lpthread -lrt
+
 all: ret
 
 ret: main.o xmod_utils.o xmod_sig_handlers.o
-	$(CC) $(CFLAGS) -o $(TARGET) main.o xmod_utils.o xmod_sig_handlers.o
+	$(CC) $(CFLAGS) -o $(TARGET) main.o xmod_utils.o xmod_sig_handlers.o $(LIBS)
 
 main.o: main.c xmod_utils.h xmod_sig_handlers.h xmod_macros.h
 	gcc -c main.c
