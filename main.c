@@ -13,55 +13,62 @@
 #include "xmod_sig_handlers.h"
 #include "xmod_macros.h"
 
-bool main_proc;                                             /* Is the main process */
-pid_t proc_id;                                              /* Proccess id */
-char * proc_start_path;                                     /* Path the process was started with */
-unsigned int nftot;                                         /* Total number of files found */
-unsigned int nfmod;                                         /* Total number of files modified */
+bool main_proc;        /* Is the main process */
+pid_t proc_id;         /* Proccess id */
+char *proc_start_path; /* Path the process was started with */
+unsigned int nftot;    /* Total number of files found */
+unsigned int nfmod;    /* Total number of files modified */
 
-pid_t children[256];                                        /* Array containing the pids of all the children of the process */
-int child_no;                                               /* Number of child processes */
+pid_t children[256]; /* Array containing the pids of all the children of the process */
+int child_no;        /* Number of child processes */
 
-char *log_path;                                             /* Logfile path */
-clock_t begin;                                              /* beggining time of the program */
-bool log_filename;                                          /* Is logfile defined or not */
+char *log_path;    /* Logfile path */
+clock_t begin;     /* beggining time of the program */
+bool log_filename; /* Is logfile defined or not */
 
-int s_argc;                                                 /* Number of command line arguments */
-char ** s_argv;                                             /* Pointer to command line arguments */
-char ** s_envp;                                             /* Pointer to environment variables */
+int s_argc;    /* Number of command line arguments */
+char **s_argv; /* Pointer to command line arguments */
+char **s_envp; /* Pointer to environment variables */
 
-char * msg;                                                 /* Message to be printed on the screen when interrupted */
+char *msg; /* Message to be printed on the screen when interrupted */
 
-sem_t *semaphore;                                           /* Pointer to sempaphore for writing registers synchronization */
+sem_t *semaphore; /* Pointer to sempaphore for writing registers synchronization */
 
-int main(int argc, char **argv, char **envp) {
-    struct sigaction new;                                   /* sigaction struct for signal beahviour */
-    sigset_t smask;                                         /* smask for signal behaviour */
+int main(int argc, char **argv, char **envp)
+{
+    struct sigaction new; /* sigaction struct for signal beahviour */
+    sigset_t smask;       /* smask for signal behaviour */
 
     semaphore = sem_open("/semaphore", O_CREAT, 0777, 1);
 
     // Set sig handlers
 
     // SIGINT
-    if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
+    if (sigemptyset(&smask) == -1)
+        perror("sigsetfunctions()");
     new.sa_handler = sigint_handler;
     new.sa_mask = smask;
     new.sa_flags = 0;
-    if (sigaction(SIGINT, &new, NULL) == -1) perror("sigaction");
+    if (sigaction(SIGINT, &new, NULL) == -1)
+        perror("sigaction");
 
     // SIGQUIT
-    if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
+    if (sigemptyset(&smask) == -1)
+        perror("sigsetfunctions()");
     new.sa_handler = sigquit_handler;
     new.sa_mask = smask;
     new.sa_flags = 0;
-    if (sigaction(SIGQUIT, &new, NULL) == -1) perror("sigaction");
+    if (sigaction(SIGQUIT, &new, NULL) == -1)
+        perror("sigaction");
 
     // SIGCONT
-    if (sigemptyset(&smask) == -1) perror("sigsetfunctions()");
+    if (sigemptyset(&smask) == -1)
+        perror("sigsetfunctions()");
     new.sa_handler = sigcont_handler;
     new.sa_mask = smask;
     new.sa_flags = 0;
-    if (sigaction(SIGCONT, &new, NULL) == -1) perror("sigaction");
+    if (sigaction(SIGCONT, &new, NULL) == -1)
+        perror("sigaction");
 
     //--------------------
 
@@ -74,7 +81,7 @@ int main(int argc, char **argv, char **envp) {
     begin = clock();
 
     // Allocate memory
-    char * path = malloc(1024);                              /* Path specified in command line arguments */
+    char *path = malloc(1024); /* Path specified in command line arguments */
     proc_start_path = malloc(1024);
 
     memcpy(path, argv[argc - 1], strlen(argv[argc - 1]) + 1);
@@ -86,17 +93,22 @@ int main(int argc, char **argv, char **envp) {
     s_envp = envp;
 
     // Find envp to generate and store records
-    for (int i = 0; envp[i] != NULL; i++){
-        if(strstr(envp[i], "LOG_FILENAME") != NULL){
-            log_path = (char*) malloc(strlen(envp[i]) * sizeof(char));
+    for (int i = 0; envp[i] != NULL; i++)
+    {
+        if (strstr(envp[i], "LOG_FILENAME") != NULL)
+        {
+            log_path = (char *)malloc(strlen(envp[i]) * sizeof(char));
             strcpy(log_path, envp[i]);
-            if (main_proc){
-                if (start_log_file() != 0){
+            if (main_proc)
+            {
+                if (start_log_file() != 0)
+                {
                     printf("Incorrect path in LOG_FILENAME envp!\n");
                     exit_plus(EXIT_FAILURE);
                 }
             }
-            else{
+            else
+            {
                 rem_beg_envp(log_path);
             }
             log_filename = true;
@@ -105,17 +117,20 @@ int main(int argc, char **argv, char **envp) {
     }
 
     // Write PROC_CREAT event
-    if (log_filename){
-        char *arg = (char*) malloc (argc * strlen(argv[argc - 1]));
+    if (log_filename)
+    {
+        char *arg = (char *)malloc(argc * strlen(argv[argc - 1]));
         char *space = " ";
-        for (int i = 0; i < argc; i++){
+        for (int i = 0; i < argc; i++)
+        {
             strncat(arg, argv[i], strlen(argv[i]));
             strncat(arg, space, strlen(space));
         }
         write_exec_register(2, PROC_CREAT, arg);
     }
 
-    if (argc < ARG_NO + 1) {
+    if (argc < ARG_NO + 1)
+    {
         printf("Incorrect arguments!\n");
         exit_plus(EXIT_FAILURE);
     }
@@ -125,12 +140,13 @@ int main(int argc, char **argv, char **envp) {
     nftot = 0;
     child_no = 0;
 
-    mode_t old_mode, new_mode;                                  /* File permission info struct */
-    struct stat path_stat;                                      /* Initial status of the argument path */ 
-    flag_t flags = {false, false, false};                       /* Command line options flags */
+    mode_t old_mode, new_mode;            /* File permission info struct */
+    struct stat path_stat;                /* Initial status of the argument path */
+    flag_t flags = {false, false, false}; /* Command line options flags */
 
     // Load current path status into path_stat
-    if (stat(path, &path_stat)) {
+    if (stat(path, &path_stat))
+    {
         perror("stat");
         exit_plus(EXIT_FAILURE);
     }
@@ -141,34 +157,46 @@ int main(int argc, char **argv, char **envp) {
     // Set all new_mode bits to 0
     memset(&new_mode, 0, sizeof(mode_t));
 
-    // Store new mode specified by command line arguments (either OCTAL-MODE or MODE) 
-    if ((argv[argc - 2][0] != '0' || sscanf(argv[argc - 2], "%o", &new_mode) != 1) && get_mode_from_string(argv[argc - 2], &new_mode, old_mode)) {
+    // Store new mode specified by command line arguments (either OCTAL-MODE or MODE)
+    if ((argv[argc - 2][0] != '0' || sscanf(argv[argc - 2], "%o", &new_mode) != 1) && get_mode_from_string(argv[argc - 2], &new_mode, old_mode))
+    {
         printf("Error mode\n");
         exit_plus(EXIT_FAILURE);
     }
 
     // Set flags from command line options
-    for (int i = 1; i < argc - 2; i++) {
+    for (int i = 1; i < argc - 2; i++)
+    {
         char str[2];
         sscanf(argv[i], "%s", str);
-        if (strcmp(str, "-v") == 0) flags.v = true;
-        else if (strcmp(str, "-c") == 0) flags.c = true;
-        else if (strcmp(str, "-R") == 0) flags.r = true;
-        else {
+        if (strcmp(str, "-v") == 0)
+            flags.v = true;
+        else if (strcmp(str, "-c") == 0)
+            flags.c = true;
+        else if (strcmp(str, "-R") == 0)
+            flags.r = true;
+        else
+        {
             printf("%s is not a specified argument\n", str);
             exit_plus(EXIT_FAILURE);
         }
     }
 
     // If -R and is directory do recursively, else change mode
-    if (flags.r && S_ISDIR(path_stat.st_mode)) {
+    if (flags.r && S_ISDIR(path_stat.st_mode))
+    {
         // change path permissions
         xmod(path, new_mode, old_mode, flags);
-        DIR * dir;
-        if (path[strlen(path) - 1] != '/') strncat(path, "/", 2);
-        if ((dir = opendir(path)) != NULL) recursive_xmod(path, dir, new_mode, old_mode, flags);
-        else perror("xmod");
-    } else {
+        DIR *dir;
+        if (path[strlen(path) - 1] != '/')
+            strncat(path, "/", 2);
+        if ((dir = opendir(path)) != NULL)
+            recursive_xmod(path, dir, new_mode, old_mode, flags);
+        else
+            perror("xmod");
+    }
+    else
+    {
         xmod(path, new_mode, old_mode, flags);
     }
 
