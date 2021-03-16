@@ -74,8 +74,8 @@ int main(int argc, char **argv, char **envp)
 
     msg = malloc(1024);
 
-    // Determine if it is main process by trying to create named pipe
-    main_proc = (mkfifo(NAMED_PIPE_NAME, ALLPERMS) >= 0);
+    // Determine if it is main process by comparing process and group IDs
+    main_proc = getpid() == getpgid(getpid());
 
     // Store beginning time of program
     begin = clock();

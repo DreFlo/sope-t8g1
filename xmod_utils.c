@@ -472,8 +472,6 @@ void exit_plus(int status)
     wait_all_children();
     if (log_filename)
         write_exec_register(2, PROC_EXIT, status);
-    if (main_proc)
-        unlink(NAMED_PIPE_NAME);
 
     sem_close(semaphore);
     if (main_proc)
