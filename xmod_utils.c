@@ -282,57 +282,57 @@ int write_exec_register(int argc, ...)
     enum event ev = va_arg(args, enum event);
 
     char *event_s;
-    char *info = (char *)malloc(100 * sizeof(char));
+    char *info = malloc(2048);
 
     switch (ev)
     {
-    case PROC_CREAT: //(..., char* cmd_args)
-        event_s = "PROC_CREAT";
-        char *arg = va_arg(args, char *);
-        snprintf(info, 1024, "%s", arg);
-        break;
-    case PROC_EXIT: //(..., int exit)
-        event_s = "PROC_EXIT";
-        int exit = va_arg(args, int);
-        snprintf(info, sizeof(info), "%d", exit);
-        break;
-    case SIGNAL_RECV: //(..., char* signal)
-        event_s = "SIGNAL_RECV";
-        char *signal = va_arg(args, char *);
-        snprintf(info, sizeof(info), "%s", signal);
-        break;
-    case SIGNAL_SENT: //(..., char* signal, pid_t pid)
-        event_s = "SIGNAL_SENT";
-        char *sig = va_arg(args, char *);
-        pid_t pid = va_arg(args, pid_t);
-        snprintf(info, sizeof(info), "%s : %d", sig, pid);
-        break;
-    case FILE_MODF: //(..., char* path, mode_t old, mode_t new)
-        event_s = "FILE_MODF";
+        case PROC_CREAT: //(..., char* cmd_args)
+            event_s = "PROC_CREAT";
+            char* arg = va_arg(args, char*);
+            snprintf(info, 2048, "%s", arg);
+            break;
+        case PROC_EXIT: //(..., int exit)
+            event_s = "PROC_EXIT";
+            int exit = va_arg(args, int);
+            snprintf(info, 100, "%d", exit);
+            break;
+        case SIGNAL_RECV: //(..., char* signal)
+            event_s = "SIGNAL_RECV";
+            char* signal = va_arg(args, char*);
+            snprintf(info, 100, "%s", signal);
+            break;
+        case SIGNAL_SENT: //(..., char* signal, pid_t pid)
+            event_s = "SIGNAL_SENT";
+            char* sig = va_arg(args, char*);
+            pid_t pid = va_arg(args, pid_t);
+            snprintf(info, 100, "%s : %d", sig, pid);
+            break;
+        case FILE_MODF: //(..., char* path, mode_t old, mode_t new)
+            event_s = "FILE_MODF";
+            
+            char* path = (char*) malloc(2000);
+            path = va_arg(args, char*);
 
-        char *path = (char *)malloc(2000);
-        path = va_arg(args, char *);
+            info = realloc(info, strlen(path) * sizeof(char) + 1000);
 
-        info = realloc(info, strlen(path) * sizeof(char) + 1000);
+            mode_t old = va_arg(args, mode_t);
+            mode_t new = va_arg(args, mode_t);
 
-        mode_t old = va_arg(args, mode_t);
-        mode_t new = va_arg(args, mode_t);
-
-        snprintf(info, strlen(path) * sizeof(char) + 100, "%s : 0%o : 0%o", path, old, new);
-        break;
+            snprintf(info, strlen(path) * sizeof(char) + 100, "%s : 0%o : 0%o", path, old, new);
+            break;
     }
     double instant = (double)(clock() - begin) / 1000;
 
-    char line[2048];
+    char line[strlen(info) * sizeof(char) + 100];
 
-    snprintf(line, 2048, "%d ; %fms ; %s ; %s\n", getpid(), instant, event_s, info);
+    snprintf(line, strlen(info) * sizeof(char) + 100, "%d ; %fms ; %s ; %s\n", getpid(), instant, event_s, info);
 
     int file = open(log_path, O_WRONLY | O_APPEND);
 
     write(file, line, strlen(line));
 
     close(file);
-
+    
     va_end(args);
 
     sem_post(semaphore);
