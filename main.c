@@ -30,7 +30,7 @@ int s_argc;    /* Number of command line arguments */
 char **s_argv; /* Pointer to command line arguments */
 char **s_envp; /* Pointer to environment variables */
 
-char *msg; /* Message to be printed on the screen when interrupted */
+char msg[1024]; /* Message to be printed on the screen when interrupted */
 
 sem_t *semaphore; /* Pointer to sempaphore for writing registers synchronization */
 
@@ -71,8 +71,6 @@ int main(int argc, char **argv, char **envp)
         perror("sigaction");
 
     //--------------------
-
-    msg = malloc(1024);
 
     // Determine if it is main process by comparing process and group IDs
     main_proc = getpid() == getpgid(getpid());
@@ -148,7 +146,7 @@ int main(int argc, char **argv, char **envp)
     memset(&new_mode, 0, sizeof(mode_t));
 
     // Store new mode specified by command line arguments (either OCTAL-MODE or MODE)
-    if ((argv[argc - 2][0] != '0' || sscanf(argv[argc - 2], "%o", &new_mode) != 1) && get_mode_from_string(argv[argc - 2], &new_mode, old_mode))
+    if ((!check_octal_mode_format(argv[argc - 2]) || sscanf(argv[argc - 2], "%o", &new_mode) != 1) && get_mode_from_string(argv[argc - 2], &new_mode, old_mode))
     {
         printf("Error mode\n");
         exit_plus(EXIT_FAILURE);

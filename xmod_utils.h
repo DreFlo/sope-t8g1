@@ -209,4 +209,12 @@ void wait_all_children();
  */
 void exit_plus(int status);
 
+/**
+ * @brief Checks if a string is a valid octal mode
+ * @param mod octal mode to check
+ * @return true if it is
+ * @return false if it is not
+ */
+bool check_octal_mode_format(char * mod);
+
 #endif // XMOD_UTILS_H_

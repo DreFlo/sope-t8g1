@@ -29,7 +29,7 @@ extern char* log_path;
 extern clock_t begin;
 extern bool log_filename;
 
-extern char * msg;
+extern char msg[1024];
 
 /**
  * @brief Handler for SIGINT signals 

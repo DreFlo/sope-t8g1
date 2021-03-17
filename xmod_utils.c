@@ -282,14 +282,14 @@ int write_exec_register(int argc, ...)
     enum event ev = va_arg(args, enum event);
 
     char *event_s;
-    char *info = malloc(100 * sizeof(char));
+    char *info = (char *)malloc(100 * sizeof(char));
 
     switch (ev)
     {
     case PROC_CREAT: //(..., char* cmd_args)
         event_s = "PROC_CREAT";
         char *arg = va_arg(args, char *);
-        snprintf(info, 100 * sizeof(char), "%s", arg);
+        snprintf(info, 1024, "%s", arg);
         break;
     case PROC_EXIT: //(..., int exit)
         event_s = "PROC_EXIT";
@@ -325,7 +325,7 @@ int write_exec_register(int argc, ...)
 
     char line[2048];
 
-    snprintf(line, strlen(info) * sizeof(char) + 100, "%d ; %fms ; %s ; %s\n", getpid(), instant, event_s, info);
+    snprintf(line, 2048, "%d ; %fms ; %s ; %s\n", getpid(), instant, event_s, info);
 
     int file = open(log_path, O_WRONLY | O_APPEND);
 
@@ -464,4 +464,13 @@ void exit_plus(int status)
         sem_unlink("/semaphore");
 
     exit(status);
+}
+
+bool check_octal_mode_format(char * mod) {
+    // Check if it in OCTALMODE
+    bool err = false;
+    for(int i = 0; i < strlen(mod); i++) {
+        if(mod[i] < '0' || mod[i] > '7') err = true;  
+    }
+    return mod != NULL && strlen(mod) > 0 && strlen(mod) <= 4 && mod[0] == '0' && !err;
 }
