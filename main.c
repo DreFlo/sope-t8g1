@@ -9,9 +9,9 @@
 #include <dirent.h>
 #include <string.h>
 #include <signal.h>
-#include "xmod_utils.h"
-#include "xmod_sig_handlers.h"
-#include "xmod_macros.h"
+#include "./xmod_utils.h"
+#include "./xmod_sig_handlers.h"
+#include "./xmod_macros.h"
 
 bool main_proc;        /* Is the main process */
 pid_t proc_id;         /* Proccess id */

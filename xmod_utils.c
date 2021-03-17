@@ -1,4 +1,4 @@
-#include "xmod_utils.h"
+#include "./xmod_utils.h"
 #include <signal.h>
 
 mode_t bitmask_permission(enum file_class c, enum file_permission p)

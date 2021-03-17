@@ -18,7 +18,7 @@
 #include <time.h>
 #include <stdarg.h>
 #include <semaphore.h>
-#include "xmod_macros.h"
+#include "./xmod_macros.h"
 
 extern bool main_proc;
 extern pid_t proc_id;

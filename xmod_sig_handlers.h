@@ -13,8 +13,8 @@
 #include <dirent.h>
 #include <signal.h>
 #include <time.h>
-#include "xmod_macros.h"
-#include "xmod_utils.h"
+#include "./xmod_macros.h"
+#include "./xmod_utils.h"
 
 extern bool main_proc;
 extern pid_t proc_id;

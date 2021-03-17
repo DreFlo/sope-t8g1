@@ -1,4 +1,4 @@
-#include "xmod_sig_handlers.h"
+#include "./xmod_sig_handlers.h"
 
 void sigint_handler()
 {
