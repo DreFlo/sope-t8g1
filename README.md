@@ -27,7 +27,6 @@ In order to compile this program you have to be on the root folder of the projec
 ### Folder structure
 
 ```
-build/                           # Root directory.
 |- xmod_sig_handlers.c           # File dedicated to signals handling
 |- xmod_sig_handlers.h           # Signals handling header file
 |- xmod_utils.c                  # File dedicated to xmod useful functions
