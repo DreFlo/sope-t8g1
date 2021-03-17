@@ -93,27 +93,17 @@ int main(int argc, char **argv, char **envp)
     s_envp = envp;
 
     // Find envp to generate and store records
-    for (int i = 0; envp[i] != NULL; i++)
-    {
-        if (strstr(envp[i], "LOG_FILENAME") != NULL)
+    if ((log_path = getenv("LOG_FILENAME")) != NULL)
+    {   
+        if (main_proc)
         {
-            log_path = (char *)malloc(strlen(envp[i]) * sizeof(char));
-            strcpy(log_path, envp[i]);
-            if (main_proc)
+            if (start_log_file() != 0)
             {
-                if (start_log_file() != 0)
-                {
-                    printf("Incorrect path in LOG_FILENAME envp!\n");
-                    exit_plus(EXIT_FAILURE);
-                }
+                printf("Incorrect path in LOG_FILENAME envp!\n");
+                exit_plus(EXIT_FAILURE);
             }
-            else
-            {
-                rem_beg_envp(log_path);
-            }
-            log_filename = true;
-            break;
         }
+        log_filename = true;
     }
 
     // Write PROC_CREAT event

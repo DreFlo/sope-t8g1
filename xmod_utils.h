@@ -146,12 +146,6 @@ mode_t get_umask();
 void str_mode(mode_t mode, char * buf);
 
 /**
- * @brief Removes the begining of envp until '='
- * @param envp environmental variable to change
- */
-void rem_beg_envp(char* envp);
-
-/**
  * @brief Creates or cleans the file to store the execution registers
  * @return int 0 on success, non-zero otherwise
  */

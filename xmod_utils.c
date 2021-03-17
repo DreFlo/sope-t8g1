@@ -227,24 +227,10 @@ void str_mode(mode_t mode, char *buf)
     buf[9] = '\0';
 }
 
-void rem_beg_envp(char *envp)
-{
-    for (size_t i = 0; i < strlen(envp); i++)
-    {
-        if (envp[i] == '=')
-        {
-            memmove(envp, envp + i + 1, strlen(envp) - i);
-            return;
-        }
-    }
-}
-
 int start_log_file()
 {
-    rem_beg_envp(log_path);
-
-    char *folder_path = (char *)malloc(strlen(log_path));
-    char *file_path = (char *)malloc(strlen(log_path) + 4 * sizeof(char));
+    char *folder_path = (char *) malloc(strlen(log_path));
+    char *file_path = (char * )malloc(strlen(log_path) + 4 * sizeof(char));
 
     switch (is_directory(log_path))
     {
@@ -303,7 +289,7 @@ int write_exec_register(int argc, ...)
     case PROC_CREAT: //(..., char* cmd_args)
         event_s = "PROC_CREAT";
         char *arg = va_arg(args, char *);
-        snprintf(info, sizeof(info), "%s", arg);
+        snprintf(info, 100 * sizeof(char), "%s", arg);
         break;
     case PROC_EXIT: //(..., int exit)
         event_s = "PROC_EXIT";
@@ -337,7 +323,7 @@ int write_exec_register(int argc, ...)
     }
     double instant = (double)(clock() - begin) / 1000;
 
-    char line[strlen(info) * sizeof(char) + 100];
+    char line[2048];
 
     snprintf(line, strlen(info) * sizeof(char) + 100, "%d ; %fms ; %s ; %s\n", getpid(), instant, event_s, info);
 
