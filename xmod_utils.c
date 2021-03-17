@@ -1,4 +1,4 @@
-#include "./xmod_utils.h"
+#include "xmod_utils.h"
 #include <signal.h>
 
 mode_t bitmask_permission(enum file_class c, enum file_permission p)
@@ -229,8 +229,8 @@ void str_mode(mode_t mode, char *buf)
 
 int start_log_file()
 {
-    char *folder_path = (char *) malloc(strlen(log_path));
-    char *file_path = (char * )malloc(strlen(log_path) + 4 * sizeof(char));
+    char *folder_path = (char* ) malloc(strlen(log_path));
+    char *file_path = (char* ) malloc(strlen(log_path) + 4 * sizeof(char));
 
     switch (is_directory(log_path))
     {
@@ -282,7 +282,7 @@ int write_exec_register(int argc, ...)
     enum event ev = va_arg(args, enum event);
 
     char *event_s;
-    char *info = malloc(2048);
+    char *info = (char*) malloc(2048);
 
     switch (ev)
     {
@@ -294,18 +294,18 @@ int write_exec_register(int argc, ...)
         case PROC_EXIT: //(..., int exit)
             event_s = "PROC_EXIT";
             int exit = va_arg(args, int);
-            snprintf(info, 100, "%d", exit);
+            snprintf(info, 2048, "%d", exit);
             break;
         case SIGNAL_RECV: //(..., char* signal)
             event_s = "SIGNAL_RECV";
             char* signal = va_arg(args, char*);
-            snprintf(info, 100, "%s", signal);
+            snprintf(info, 2048, "%s", signal);
             break;
         case SIGNAL_SENT: //(..., char* signal, pid_t pid)
             event_s = "SIGNAL_SENT";
             char* sig = va_arg(args, char*);
             pid_t pid = va_arg(args, pid_t);
-            snprintf(info, 100, "%s : %d", sig, pid);
+            snprintf(info, 2048, "%s : %d", sig, pid);
             break;
         case FILE_MODF: //(..., char* path, mode_t old, mode_t new)
             event_s = "FILE_MODF";
