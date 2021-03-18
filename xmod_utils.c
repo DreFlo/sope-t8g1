@@ -321,7 +321,8 @@ int write_exec_register(int argc, ...)
             snprintf(info, strlen(path) * sizeof(char) + 100, "%s : 0%o : 0%o", path, old, new);
             break;
     }
-    double instant = (double)(clock() - begin) / 1000;
+    struct tms t;
+    double instant = ((double)(times(&t) - begin) / sysconf(_SC_CLK_TCK)) * 1000;
 
     char line[strlen(info) * sizeof(char) + 100];
 

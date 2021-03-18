@@ -75,9 +75,10 @@ int main(int argc, char **argv, char **envp)
     // Determine if it is main process by comparing process and group IDs
     main_proc = getpid() == getpgid(getpid());
 
+    struct tms t;
     // Store beginning time of program
-    begin = clock();
-
+    begin = times(&t);
+    
     // Allocate memory
     char *path = malloc(1024); /* Path specified in command line arguments */
     proc_start_path = malloc(1024);
