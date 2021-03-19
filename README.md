@@ -43,10 +43,10 @@ In order to compile this program you have to be on the root folder of the projec
 
 ## Group Members and Self Evaluation
 
-André de Jesus Fernandes Flores,	201907001  
-Diogo Luís Araujo de Faria,	201907014  
-Maria Marta Nunes Andrade Lobo dos Santos,	201604530  
-Tiago Andre Batista Rodrigues,	201906807  
+André de Jesus Fernandes Flores,	201907001 - 25%  
+Diogo Luís Araujo de Faria,	201907014 - 25%  
+Maria Marta Nunes Andrade Lobo dos Santos,	201604530 - 25%  
+Tiago Andre Batista Rodrigues,	201906807 - 25%  
 
 
 
