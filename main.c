@@ -98,7 +98,7 @@ int main(int argc, char **argv, char **envp)
         {
             if (start_log_file() != 0)
             {
-                printf("Incorrect path in LOG_FILENAME envp!\n");
+                fprintf(stderr ,"Incorrect path in LOG_FILENAME envp!\n");
                 exit_plus(EXIT_FAILURE);
             }
         }
@@ -120,7 +120,7 @@ int main(int argc, char **argv, char **envp)
 
     if (argc < ARG_NO + 1)
     {
-        printf("Incorrect arguments!\n");
+        fprintf(stderr, "Incorrect arguments!\n");
         exit_plus(EXIT_FAILURE);
     }
 
@@ -149,7 +149,7 @@ int main(int argc, char **argv, char **envp)
     // Store new mode specified by command line arguments (either OCTAL-MODE or MODE)
     if ((!check_octal_mode_format(argv[argc - 2]) || sscanf(argv[argc - 2], "%o", &new_mode) != 1) && get_mode_from_string(argv[argc - 2], &new_mode, old_mode))
     {
-        printf("Error mode\n");
+        fprintf(stderr, "Error mode\n");
         exit_plus(EXIT_FAILURE);
     }
 
@@ -166,7 +166,7 @@ int main(int argc, char **argv, char **envp)
             flags.r = true;
         else
         {
-            printf("%s is not a specified argument\n", str);
+            fprintf(stderr, "%s is not a specified argument\n", str);
             exit_plus(EXIT_FAILURE);
         }
     }
