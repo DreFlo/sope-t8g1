@@ -36,9 +36,17 @@ In order to compile this program you have to be on the root folder of the projec
 |- Makefile                      # Makefile used for building our documents
 ```
 
-### Implementation Details
+## Implementation Details
 
-Things that were not especified 
+* We resort to the use of Forks for recursivity.
+* In order to determine the main process, we managed to check the group leader of the process group.
 
-### Self Evaluation
+## Group Members and Self Evaluation
+
+André de Jesus Fernandes Flores,	201907001  
+Diogo Luís Araujo de Faria,	201907014  
+Maria Marta Nunes Andrade Lobo dos Santos,	201604530  
+Tiago Andre Batista Rodrigues,	201906807  
+
+
 
