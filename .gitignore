@@ -1,5 +1,7 @@
 *.o
 xmod
+s
+c
 .vscode
 !server.o
 !lib.o
