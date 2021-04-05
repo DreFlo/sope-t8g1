@@ -8,10 +8,6 @@
 #include <time.h>
 #include <unistd.h>
 
-// Placeholder
-unsigned int runtime = 0;
-// Placeholder
-
 unsigned int thread_no = 0;
 int fifo_file;
 
@@ -29,11 +25,11 @@ void print_usage() {
 }
 
 /**
- * @brief Worker thread function
+ * @brief Worker thread function. Handles all an individual thread does.
  * @param arg Pointer to a request number
  * @return void* 
  */
-void *rot(void *arg) {
+void *thread_rot(void *arg) {
     // store request number locally and free arg pointer
     int i = * (int *) arg;
     free(arg);
@@ -43,6 +39,7 @@ void *rot(void *arg) {
     int thread_fifo;
     long t = random() % 9 + 1;
 
+    // format strings
     snprintf(str, 1024, "%d %ld %d %lu -1", i, t, getpid(), pthread_self());
     snprintf(thread_fifo_path, 256, "/tmp/%d.%lu", getpid(), pthread_self());
 
@@ -50,6 +47,7 @@ void *rot(void *arg) {
         perror("mkfifo thread");
     }
 
+    // write info to public fifo
     // begin critical writing region
 
     pthread_mutex_lock(&mutex);
@@ -62,10 +60,13 @@ void *rot(void *arg) {
 
     printf("%ld ; %d ; %d ; %lu : -1 ; IWANT\n", time(NULL), i, getpid(), pthread_self());
 
+    // open private fifo, waits for server
     while ((thread_fifo = open(thread_fifo_path, O_RDONLY)) < 0);
 
+    // read server response
     read(thread_fifo, str, 1024);
 
+    // close and remove private fifo
     if (close(thread_fifo) != 0) {
         perror("close thread fifo");
     }
@@ -79,6 +80,7 @@ void *rot(void *arg) {
 
 int main(int argc, char ** argv, char ** envp) {
     char fifoname[256];
+    unsigned runtime;
 
     // save program start time
     time_t start_time = time(NULL);
@@ -95,10 +97,12 @@ int main(int argc, char ** argv, char ** envp) {
 
     // end command line arguments section
 
+    // set random seed
     srandom(time(NULL));
 
     mkfifo(fifoname, ALLPERMS);
 
+    // open fifo, waits for server
     while ((fifo_file = open(fifoname, O_WRONLY)) < 0);
 
     // create threads
@@ -109,11 +113,11 @@ int main(int argc, char ** argv, char ** envp) {
         wait_time.tv_nsec = 1000000 + ((random() % 25) * 1000000);
         nanosleep(&wait_time, NULL);
 
-        //
+        // save thread number independent variable
         int * i_ptr = malloc(sizeof(int));
         *i_ptr = thread_no;
 
-        pthread_create(&ids[thread_no], NULL, rot, i_ptr);
+        pthread_create(&ids[thread_no], NULL, thread_rot, i_ptr);
 
         thread_no++;
     }
