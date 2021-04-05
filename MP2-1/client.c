@@ -38,13 +38,12 @@ void *rot(void *arg) {
     int i = * (int *) arg;
     free(arg);
 
-    // 
-    char request_str[1024];
+    char str[1024];
     char thread_fifo_path[256];
     int thread_fifo;
     long t = random() % 9 + 1;
 
-    snprintf(request_str, 1024, "%d %ld %d %lu -1", i, t, getpid(), pthread_self());
+    snprintf(str, 1024, "%d %ld %d %lu -1", i, t, getpid(), pthread_self());
     snprintf(thread_fifo_path, 256, "/tmp/%d.%lu", getpid(), pthread_self());
 
     if (mkfifo(thread_fifo_path, ALLPERMS) != 0) {
@@ -55,7 +54,7 @@ void *rot(void *arg) {
 
     pthread_mutex_lock(&mutex);
 
-    write(fifo_file, request_str, 1024);
+    write(fifo_file, str, 1024);
 
     pthread_mutex_unlock(&mutex);
 
@@ -64,6 +63,8 @@ void *rot(void *arg) {
     printf("%ld ; %d ; %d ; %lu : -1 ; IWANT\n", time(NULL), i, getpid(), pthread_self());
 
     while ((thread_fifo = open(thread_fifo_path, O_RDONLY)) < 0);
+
+    read(thread_fifo, str, 1024);
 
     if (close(thread_fifo) != 0) {
         perror("close thread fifo");
