@@ -42,19 +42,16 @@ void *rot(void *arg) {
     char request_str[1024];
     char thread_fifo_path[256];
     int thread_fifo;
+    long t = random() % 9 + 1;
 
-    snprintf(request_str, 1024, "%d %ld %d %lu -1", i, random() % 9 + 1, getpid(), pthread_self());
+    snprintf(request_str, 1024, "%d %ld %d %lu -1", i, t, getpid(), pthread_self());
     snprintf(thread_fifo_path, 256, "/tmp/%d.%lu", getpid(), pthread_self());
 
     if (mkfifo(thread_fifo_path, ALLPERMS) != 0) {
         perror("mkfifo thread");
     }
 
-    if ((thread_fifo = open(thread_fifo_path, O_RDONLY)) != 0) {
-        perror("open thread fifo");
-    }
-
-    // critical writing region
+    // begin critical writing region
 
     pthread_mutex_lock(&mutex);
 
@@ -62,9 +59,11 @@ void *rot(void *arg) {
 
     pthread_mutex_unlock(&mutex);
 
-    printf("%ld ; %d ; pid ; tid : res ; IWANT\n", time(NULL), i);
-
     // end critical writing region
+
+    printf("%ld ; %d ; %d ; %lu : -1 ; IWANT\n", time(NULL), i, getpid(), pthread_self());
+
+    while ((thread_fifo = open(thread_fifo_path, O_RDONLY)) < 0);
 
     if (close(thread_fifo) != 0) {
         perror("close thread fifo");
@@ -99,9 +98,7 @@ int main(int argc, char ** argv, char ** envp) {
 
     mkfifo(fifoname, ALLPERMS);
 
-    if ((fifo_file = open(fifoname, O_WRONLY)) == -1) {
-        perror("open main fifo");
-    }
+    while ((fifo_file = open(fifoname, O_WRONLY)) < 0);
 
     // create threads
     while (time(NULL) < start_time + runtime) {
