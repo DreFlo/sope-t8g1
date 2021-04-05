@@ -62,6 +62,8 @@ void *rot(void *arg) {
 
     pthread_mutex_unlock(&mutex);
 
+    printf("%ld ; %d ; pid ; tid : res ; IWANT\n", time(NULL), i);
+
     // end critical writing region
 
     if (close(thread_fifo) != 0) {
