@@ -66,13 +66,15 @@ void *thread_rot(void *arg) {
     // end critical writing region
 
     // print request sent message
-    printf("%ld ; %d ; %d ; %lu : -1 ; IWANT\n", time(NULL), i, getpid(), pthread_self());
+    printf("%ld ; %d ; %d ; %d ; %lu : -1 ; IWANT\n", time(NULL), i, t, getpid(), pthread_self());
 
     // open private fifo, waits for server
     while ((thread_fifo = open(thread_fifo_path, O_RDONLY)) < 0);
 
     // read server response
     read_msg_from_server(thread_fifo, &msg);
+
+    printf("%ld ; %d ; %d ; %d : %lu ; %d ; GOTRS\n", time(NULL), msg.rid, msg.tskload, msg.pid, msg.tid, msg.tskres);
 
     // close and remove private fifo
     if (close(thread_fifo) != 0) {

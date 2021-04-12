@@ -12,11 +12,11 @@
 #include <unistd.h>
 
 struct message {
-    int rid; // request id
-    pid_t pid;   // process id
-    pthread_t tid;   // thread id
-    int tskload; // task load
-    int tskres; // task result
+    int rid; /* request id */
+    pid_t pid;   /* process id */
+    pthread_t tid;   /* thread id */
+    int tskload; /* task load */
+    int tskres; /* task result */
 } msg_t, *msg_p;
 
 /**
