@@ -40,7 +40,7 @@ void *thread_rot(void *arg) {
     long t = random() % 9 + 1;
 
     // format strings
-    snprintf(str, 1024, "%d %ld %d %lu -1", i, t, getpid(), pthread_self());
+    snprintf(str, 1024, "%d %d %lu %ld -1", i, getpid(), pthread_self(), t);
     snprintf(thread_fifo_path, 256, "/tmp/%d.%lu", getpid(), pthread_self());
 
     if (mkfifo(thread_fifo_path, ALLPERMS) != 0) {
@@ -58,6 +58,7 @@ void *thread_rot(void *arg) {
 
     // end critical writing region
 
+    // print request sent message
     printf("%ld ; %d ; %d ; %lu : -1 ; IWANT\n", time(NULL), i, getpid(), pthread_self());
 
     // open private fifo, waits for server
