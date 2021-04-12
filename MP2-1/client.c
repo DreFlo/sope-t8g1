@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <unistd.h>
+#include "client_utils.h"
 
 // IMPORTANT
 // SERVER CLIENT MESSAGES FORMAT
@@ -41,10 +42,12 @@ void *thread_rot(void *arg) {
     char str[1024];
     char thread_fifo_path[256];
     int thread_fifo;
-    long t = random() % 9 + 1;
+    int t = random() % 9 + 1;
+
+    struct message msg;    
 
     // format strings
-    snprintf(str, 1024, "%d %d %lu %ld -1", i, getpid(), pthread_self(), t);
+    snprintf(str, 1024, "%d %d %lu %d -1", i, getpid(), pthread_self(), t);
     snprintf(thread_fifo_path, 256, "/tmp/%d.%lu", getpid(), pthread_self());
 
     if (mkfifo(thread_fifo_path, ALLPERMS) != 0) {
@@ -69,7 +72,7 @@ void *thread_rot(void *arg) {
     while ((thread_fifo = open(thread_fifo_path, O_RDONLY)) < 0);
 
     // read server response
-    read(thread_fifo, str, 1024);
+    read_msg_from_server(thread_fifo, &msg);
 
     // close and remove private fifo
     if (close(thread_fifo) != 0) {
@@ -83,7 +86,7 @@ void *thread_rot(void *arg) {
     return NULL;
 }
 
-int main(int argc, char ** argv, char ** envp) {
+int main(int argc, char ** argv) {
     char fifoname[256];
     unsigned runtime;
 
@@ -128,7 +131,7 @@ int main(int argc, char ** argv, char ** envp) {
     }
 
     // ensure all threads are done
-    for (int i = 0; i < thread_no; i++) {
+    for (unsigned int i = 0; i < thread_no; i++) {
         pthread_join(ids[i], NULL);
     }
 
