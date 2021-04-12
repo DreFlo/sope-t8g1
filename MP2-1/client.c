@@ -54,6 +54,8 @@ void *thread_rot(void *arg) {
         perror("mkfifo thread");
     }
 
+    printf("\n\n\n\n%s\n\n\n\n", str);
+
     // write info to public fifo
     // begin critical writing region
 
