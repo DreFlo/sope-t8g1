@@ -8,6 +8,10 @@
 #include <time.h>
 #include <unistd.h>
 
+// IMPORTANT
+// SERVER CLIENT MESSAGES FORMAT
+// i pid tid t res
+
 unsigned int thread_no = 0;
 int fifo_file;
 
