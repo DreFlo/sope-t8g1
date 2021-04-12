@@ -102,7 +102,7 @@ int main(int argc, char ** argv) {
 
     // check and read command line arguments
 
-    if (argc != 4 || (argc == 4 && strcmp(argv[1], "-t") != 0)) print_usage();
+    if (argc != 4 || strcmp(argv[1], "-t") != 0) print_usage();
 
     sscanf(argv[2], "%u", &runtime);
     sscanf(argv[3], "%s", fifoname);
