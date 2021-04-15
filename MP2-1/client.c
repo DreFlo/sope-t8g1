@@ -7,7 +7,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <unistd.h>
-#include "client_utils.h"
+#include "common.h"
 
 // IMPORTANT
 // SERVER CLIENT MESSAGES FORMAT
@@ -39,29 +39,25 @@ void *thread_rot(void *arg) {
     int i = * (int *) arg;
     free(arg);
 
-    char str[1024];
     char thread_fifo_path[256];
     int thread_fifo;
     int t = random() % 9 + 1;
 
-    struct message msg;    
+    Message msg = {i, getpid(), pthread_self(), t, -1};
 
     // format strings
-    snprintf(str, 1024, "%d %d %lu %d -1", i, getpid(), pthread_self(), t);
     snprintf(thread_fifo_path, 256, "/tmp/%d.%lu", getpid(), pthread_self());
 
     if (mkfifo(thread_fifo_path, ALLPERMS) != 0) {
         perror("mkfifo thread");
     }
 
-    printf("\n\n\n\n%s\n\n\n\n", str);
-
     // write info to public fifo
     // begin critical writing region
 
     pthread_mutex_lock(&mutex);
 
-    write(fifo_file, str, 1024);
+    write(fifo_file, (void *) &msg, sizeof(Message));
 
     pthread_mutex_unlock(&mutex);
 
@@ -74,7 +70,7 @@ void *thread_rot(void *arg) {
     while ((thread_fifo = open(thread_fifo_path, O_RDONLY)) < 0);
 
     // read server response
-    read_msg_from_server(thread_fifo, &msg);
+    read(thread_fifo, (void *) &msg, sizeof(Message));
 
     printf("%ld ; %d ; %d ; %d : %lu ; %d ; GOTRS\n", time(NULL), msg.rid, msg.tskload, msg.pid, msg.tid, msg.tskres);
 
