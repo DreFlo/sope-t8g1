@@ -9,10 +9,6 @@
 #include <unistd.h>
 #include "common.h"
 
-// IMPORTANT
-// SERVER CLIENT MESSAGES FORMAT
-// i pid tid t res
-
 unsigned int thread_no = 0;
 int fifo_file;
 
@@ -68,6 +64,8 @@ void *thread_rot(void *arg) {
 
     // open private fifo, waits for server
     while ((thread_fifo = open(thread_fifo_path, O_RDONLY)) < 0);
+
+    printf("Thread %lu arrived!\n", pthread_self());
 
     // read server response
     read(thread_fifo, (void *) &msg, sizeof(Message));
