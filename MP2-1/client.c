@@ -106,7 +106,7 @@ int main(int argc, char ** argv) {
     // set random seed
     srandom(time(NULL));
 
-    mkfifo(fifoname, ALLPERMS);
+    mkfifo(fifoname, 0660);
 
     // open fifo, waits for server
     while ((fifo_file = open(fifoname, O_WRONLY)) < 0);
