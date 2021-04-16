@@ -39,13 +39,14 @@ void *thread_rot(void *arg) {
     int thread_fifo;
     int t = random() % 9 + 1;
 
-    Message msg = {i, getpid(), pthread_self(), t, -1};
+    Message msg = {i, t, getpid(), pthread_self(), -1};
 
     // format strings
     snprintf(thread_fifo_path, 256, "/tmp/%d.%lu", getpid(), pthread_self());
 
     if (mkfifo(thread_fifo_path, ALLPERMS) != 0) {
-        perror("mkfifo thread");
+        perror("[client] failed to create private fifo");
+        exit(EXIT_FAILURE);
     }
 
     // write info to public fifo
@@ -53,32 +54,52 @@ void *thread_rot(void *arg) {
 
     pthread_mutex_lock(&mutex);
 
-    write(fifo_file, (void *) &msg, sizeof(Message));
+    int num = write(fifo_file, (void *) &msg, sizeof(Message));
 
     pthread_mutex_unlock(&mutex);
 
     // end critical writing region
 
     // print request sent message
-    printf("%ld ; %d ; %d ; %d ; %lu : -1 ; IWANT\n", time(NULL), i, t, getpid(), pthread_self());
+
+    if(num < 0){
+        perror("[client] failed to write in public fifo");
+        exit(EXIT_FAILURE);
+    }
+    else if (num > 0){
+        Message r_msg = {i, t, getpid(), pthread_self(), -1};
+        output(&r_msg, IWANT);
+    }
 
     // open private fifo, waits for server
     while ((thread_fifo = open(thread_fifo_path, O_RDONLY)) < 0);
 
     printf("Thread %lu arrived!\n", pthread_self());
 
-    // read server response
-    read(thread_fifo, (void *) &msg, sizeof(Message));
-
-    printf("%ld ; %d ; %d ; %d : %lu ; %d ; GOTRS\n", time(NULL), msg.rid, msg.tskload, msg.pid, msg.tid, msg.tskres);
+    // read server response 
+    num = read(thread_fifo, (void *) &msg, sizeof(Message));
+    
+    if(num < 0){
+        perror("[client] faled to read private fifo");
+        exit(EXIT_FAILURE);
+    }
+    else if (num > 0){
+        if(msg.res == -1) output(&msg, CLOSD);
+        else output(&msg, GOTRS);
+    }
+    else{
+        output(&msg, FAILD); //NOT SURE IF GAVUP
+    }
 
     // close and remove private fifo
     if (close(thread_fifo) != 0) {
-        perror("close thread fifo");
+        perror("[client] failed to close private fifo");
+        exit(EXIT_FAILURE);
     }
 
     if (unlink(thread_fifo_path) != 0) {
-        perror("unlink thread fifo");
+        perror("[client] failed to unlink private fifo");
+        exit(EXIT_FAILURE);
     }
 
     return NULL;
@@ -134,7 +155,8 @@ int main(int argc, char ** argv) {
     }
 
     if (close(fifo_file) == -1) {
-        perror("close main fifo");
+        perror("[clinet] failed to close main fifo");
+        exit(EXIT_FAILURE);
     }
 
     pthread_mutex_destroy(&mutex);
