@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include "common.h"
 #include "client_utils.h"
+#include "client_signals.h"
 
 unsigned int thread_no = 0;
 int fifo_file;
