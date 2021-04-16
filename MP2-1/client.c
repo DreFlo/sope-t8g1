@@ -8,6 +8,7 @@
 #include <time.h>
 #include <unistd.h>
 #include "common.h"
+#include "client_utils.h"
 
 unsigned int thread_no = 0;
 int fifo_file;
@@ -84,7 +85,7 @@ void *thread_rot(void *arg) {
         exit(EXIT_FAILURE);
     }
     else if (num > 0){
-        if(msg.res == -1) output(&msg, CLOSD);
+        if(msg.tskres == -1) output(&msg, CLOSD);
         else output(&msg, GOTRS);
     }
     else{
