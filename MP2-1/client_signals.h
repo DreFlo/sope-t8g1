@@ -2,6 +2,7 @@
 #define _CLIENT_SIGNALS_H
 
 #include "signal.h"
+#include "stdlib.h"
 
 // TODO
 /**

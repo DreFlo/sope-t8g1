@@ -1,7 +1,7 @@
 #include "client_signals.h"
 
 void sigpipe_handler() {
-    return;
+    exit(EXIT_FAILURE);
 }
 
 void sigalrm_handler() {

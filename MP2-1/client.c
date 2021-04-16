@@ -108,8 +108,11 @@ void *thread_rot(void *arg) {
 }
 
 int main(int argc, char ** argv) {
-    char fifoname[256];
-    unsigned runtime;
+    char fifoname[256]; /* public fifo path */
+    unsigned runtime;   /* max program running time */
+
+    struct sigaction sighandler;
+    sigset_t smask;
 
     // save program start time
     time_t start_time = time(NULL);
@@ -125,6 +128,15 @@ int main(int argc, char ** argv) {
     sscanf(argv[3], "%s", fifoname);
 
     // end command line arguments section
+
+    // set sig handlers
+    if (sigemptyset(&smask) == -1)
+        perror("[client] sigsetfunctions()");
+    sighandler.sa_handler = sigpipe_handler;
+    sighandler.sa_mask = smask;
+    sighandler.sa_flags = 0;
+    if (sigaction(SIGPIPE, &sighandler, NULL) == -1)
+        perror("sigaction");
 
     // set random seed
     srandom(time(NULL));
