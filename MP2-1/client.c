@@ -41,7 +41,7 @@ void *thread_rot(void *arg) {
     int thread_fifo;
     int t = random() % 9 + 1;
 
-    Message msg = {i, t, getpid(), pthread_self(), -1};
+    Message msg = {i, getpid(), pthread_self(), t, -1};
 
     // format strings
     snprintf(thread_fifo_path, 256, "/tmp/%d.%lu", getpid(), pthread_self());
@@ -69,7 +69,7 @@ void *thread_rot(void *arg) {
         exit(EXIT_FAILURE);
     }
     else if (num > 0){
-        Message r_msg = {i, t, getpid(), pthread_self(), -1};
+        Message r_msg = {i, getpid(), pthread_self(), t, -1};
         output(&r_msg, IWANT);
     }
 
