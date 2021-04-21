@@ -27,4 +27,6 @@ typedef enum{
  */
 void output(Message *msg, Operation op);
 
+void * thread_gavup(void * arg);
+
 #endif // _CLIENT_UTILS_H

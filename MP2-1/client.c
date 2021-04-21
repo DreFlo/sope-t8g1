@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <unistd.h>
+#include <stdbool.h>
 #include "common.h"
 #include "client_utils.h"
 #include "client_signals.h"
@@ -43,6 +44,8 @@ void *thread_rot(void *arg) {
 
     Message msg = {i, getpid(), pthread_self(), t, -1};
 
+    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
+
     // format strings
     snprintf(thread_fifo_path, 256, "/tmp/%d.%lu", getpid(), pthread_self());
 
@@ -61,6 +64,8 @@ void *thread_rot(void *arg) {
     pthread_mutex_unlock(&mutex);
 
     // end critical writing region
+
+    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
 
     // print request sent message
 
@@ -138,13 +143,25 @@ int main(int argc, char ** argv) {
     if (sigaction(SIGPIPE, &sighandler, NULL) == -1)
         perror("sigaction");
 
+    if (sigemptyset(&smask) == -1)
+        perror("[client] sigsetfunctions()");
+    sighandler.sa_handler = sigalrm_handler;
+    sighandler.sa_mask = smask;
+    sighandler.sa_flags = 0;
+    if (sigaction(SIGALRM, &sighandler, NULL) == -1)
+        perror("sigaction");
+
     // set random seed
     srandom(time(NULL));
 
-    mkfifo(fifoname, 0660);
+    // Timeout set to 5 seconds
+    alarm(5);
 
     // open fifo, waits for server
     while ((fifo_file = open(fifoname, O_WRONLY)) < 0);
+
+    // Disable alarm
+    alarm(0);
 
     // create threads
     while (time(NULL) < start_time + runtime) {
@@ -169,7 +186,7 @@ int main(int argc, char ** argv) {
     }
 
     if (close(fifo_file) == -1) {
-        perror("[clinet] failed to close main fifo");
+        perror("[client] failed to close main fifo");
         exit(EXIT_FAILURE);
     }
 

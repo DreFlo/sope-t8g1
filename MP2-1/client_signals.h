@@ -1,9 +1,14 @@
 #ifndef _CLIENT_SIGNALS_H
 #define _CLIENT_SIGNALS_H
 
-#include "signal.h"
-#include "stdlib.h"
-#include "stdio.h"
+#include <signal.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <pthread.h>
+
+extern unsigned int thread_no;
+extern pthread_t ids[1024];
 
 // TODO
 /**
