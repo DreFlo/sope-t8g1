@@ -81,8 +81,6 @@ void *thread_rot(void *arg) {
     // open private fifo, waits for server
     while ((thread_fifo = open(thread_fifo_path, O_RDONLY)) < 0);
 
-    printf("Thread %lu arrived!\n", pthread_self());
-
     // read server response 
     num = read(thread_fifo, (void *) &msg, sizeof(Message));
     
@@ -95,7 +93,7 @@ void *thread_rot(void *arg) {
         else output(&msg, GOTRS);
     }
     else{
-        output(&msg, FAILD); //NOT SURE IF GAVUP
+    output(&msg, FAILD); //NOT SURE IF GAVUP
     }
 
     // close and remove private fifo
