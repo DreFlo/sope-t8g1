@@ -97,6 +97,7 @@ total_FAILD=$(grep -o -i FAILD server_log.txt | wc -l)
 
 getSequences() {
 #Right and unique sequence
+#Changed this part 6 to 5
 RES_CLIENT=$(grep 'GOTRS' client_log.txt | tr -d [:blank:] | awk -F\; '{print $5}' | sort -n)
 RES_EXEC=$(grep 'TSKEX' server_log.txt | tr -d [:blank:] | awk -F\; '{print $6}' | sort -n)
 RES_DONE=$(grep 'TSKDN' server_log.txt | tr -d [:blank:] | awk -F\; '{print $6}' | sort -n)
