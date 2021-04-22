@@ -83,6 +83,9 @@ void *thread_rot(void *arg) {
 
     // read server response 
     num = read(thread_fifo, (void *) &msg, sizeof(Message));
+
+    msg.pid = getpid();
+    msg.tid = pthread_self();
     
     if(num < 0){
         perror("[client] faled to read private fifo");
