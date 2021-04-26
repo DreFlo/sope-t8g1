@@ -6,7 +6,7 @@ void sigpipe_handler() {
         pthread_cancel(ids[i]);
     }
     for(unsigned int i = 0;i < thread_no; i++) {
-        pthread_join(ids[i]);
+        pthread_join(ids[i], NULL);
     }
     exit(EXIT_SUCCESS);
 }
