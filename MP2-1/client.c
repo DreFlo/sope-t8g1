@@ -91,13 +91,9 @@ void *thread_rot(void *arg) {
         perror("[client] faled to read private fifo");
         exit(EXIT_FAILURE);
     }
-    else if (num > 0){
-        if(msg.tskres == -1) output(&msg, CLOSD);
-        else output(&msg, GOTRS);
-    }
-    else{
-    output(&msg, FAILD); //NOT SURE IF GAVUP
-    }
+    else if (msg.tskres == -1) output(&msg, CLOSD);
+    else output(&msg, GOTRS);
+
 
     // close and remove private fifo
     if (close(thread_fifo) != 0) {

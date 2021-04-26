@@ -5,7 +5,10 @@ void sigpipe_handler() {
     for (unsigned int i = 0; i < thread_no; i++) {
         pthread_cancel(ids[i]);
     }
-    exit(EXIT_FAILURE);
+    for(unsigned int i = 0;i < thread_no; i++) {
+        pthread_join(ids[i]);
+    }
+    exit(EXIT_SUCCESS);
 }
 
 void sigalrm_handler() {
