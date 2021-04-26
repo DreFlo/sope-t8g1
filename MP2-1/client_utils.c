@@ -34,7 +34,7 @@ void output(Message *msg, Operation op){
     };
 
     char output[200];
-    if (sprintf(output, "%ld ; %d ; %d ; %d ; %lu ; %d ; %s\n", time(NULL), msg->rid, msg->tskload, msg->pid, msg->tid, msg->tskres, op_string) < 0){
+    if (sprintf(output, "%ld; %d; %d; %d; %lu; %d; %s\n", time(NULL), msg->rid, msg->tskload, msg->pid, msg->tid, msg->tskres, op_string) < 0){
         free(msg);
         perror("[client] sprintf failed in output");
         exit(EXIT_FAILURE);
