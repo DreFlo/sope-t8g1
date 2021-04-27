@@ -1,5 +1,5 @@
-#ifndef _CLIENT_SIGNALS_H
-#define _CLIENT_SIGNALS_H
+#ifndef MP2_1_CLIENT_SIGNALS_H_
+#define MP2_1_CLIENT_SIGNALS_H_
 
 #include <signal.h>
 #include <stdlib.h>
@@ -22,4 +22,4 @@ void sigpipe_handler();
  */
 void sigalrm_handler();
 
-#endif // _CLIENT_SIGNALS_H
+#endif // MP2_1_CLIENT_SIGNALS_H_

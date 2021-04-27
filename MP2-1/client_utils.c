@@ -1,40 +1,43 @@
 #include "client_utils.h"
 
-void output(Message *msg, Operation op){
+void output(Message *msg, Operation op)
+{
     char op_string[MAX_OP_LEN];
 
-    switch(op){
-        case IWANT:
-            sprintf(op_string, "IWANT");
-            break;
-        case RECVD:
-            sprintf(op_string, "RECVD");
-            break;
-        case TSKEX:
-            sprintf(op_string, "TSKEX");
-            break;
-        case TSKDN:
-            sprintf(op_string, "TSKDN");
-            break;
-        case GOTRS:
-            sprintf(op_string, "GOTRS");
-            break;
-        case LATE:
-            sprintf(op_string, "2LATE");
-            break;
-        case CLOSD:
-            sprintf(op_string, "CLOSD");
-            break;
-        case GAVUP:
-            sprintf(op_string, "GAVUP");
-            break;
-        case FAILD:
-            sprintf(op_string, "FAILD");
-            break;
+    switch (op)
+    {
+    case IWANT:
+        sprintf(op_string, "IWANT");
+        break;
+    case RECVD:
+        sprintf(op_string, "RECVD");
+        break;
+    case TSKEX:
+        sprintf(op_string, "TSKEX");
+        break;
+    case TSKDN:
+        sprintf(op_string, "TSKDN");
+        break;
+    case GOTRS:
+        sprintf(op_string, "GOTRS");
+        break;
+    case LATE:
+        sprintf(op_string, "2LATE");
+        break;
+    case CLOSD:
+        sprintf(op_string, "CLOSD");
+        break;
+    case GAVUP:
+        sprintf(op_string, "GAVUP");
+        break;
+    case FAILD:
+        sprintf(op_string, "FAILD");
+        break;
     };
 
     char output[200];
-    if (sprintf(output, "%ld; %d; %d; %d; %lu; %d; %s\n", time(NULL), msg->rid, msg->tskload, msg->pid, msg->tid, msg->tskres, op_string) < 0){
+    if (sprintf(output, "%ld; %d; %d; %d; %lu; %d; %s\n", time(NULL), msg->rid, msg->tskload, msg->pid, msg->tid, msg->tskres, op_string) < 0)
+    {
         free(msg);
         perror("[client] sprintf failed in output");
         exit(EXIT_FAILURE);
@@ -43,7 +46,8 @@ void output(Message *msg, Operation op){
     printf("%s", output);
 }
 
-void * thread_gavup(void * arg) {
-    output((Message *) arg, GAVUP);
+void *thread_gavup(void *arg)
+{
+    output((Message *)arg, GAVUP);
     return NULL;
 }
