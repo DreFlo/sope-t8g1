@@ -98,16 +98,22 @@ void *thread_rot(void *arg)
         perror("[client] failed to read private fifo");
         exit(EXIT_FAILURE);
     }
-    else if (msg.tskres == -1)
-        output(&msg, CLOSD);
+    else if (num > 0)
+    {
+        if (msg.tskres == -1)
+            output(&msg, CLOSD);
+        else
+            output(&msg, GOTRS);
+    }
     else
-        output(&msg, GOTRS);
+        output(&msg, GAVUP);
 
     // close and remove private fifo
     if (close(thread_fifo) != 0)
     {
         perror("[client] failed to close private fifo");
         exit(EXIT_FAILURE);
+        pthread_exit(NULL);
     }
 
     if (unlink(thread_fifo_path) != 0)
@@ -116,6 +122,7 @@ void *thread_rot(void *arg)
         exit(EXIT_FAILURE);
     }
 
+    pthread_exit(NULL);
     return NULL;
 }
 
@@ -126,11 +133,6 @@ int main(int argc, char **argv)
 
     struct sigaction sighandler;
     sigset_t smask;
-
-    // initialize and set thread detached attribute
-    pthread_attr_t attr;
-    pthread_attr_init(&attr);
-    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
     // save program start time
     time_t start_time = time(NULL);
@@ -191,19 +193,16 @@ int main(int argc, char **argv)
         int *i_ptr = malloc(sizeof(int));
         *i_ptr = thread_no;
 
-        pthread_create(&ids[thread_no], &attr, thread_rot, i_ptr);
+        pthread_create(&ids[thread_no], NULL, thread_rot, i_ptr);
 
+        /*pthread_detach(ids[thread_no]);*/
         thread_no++;
     }
-
-    // free library resources used by the attribute
-    pthread_attr_destroy(&attr);
 
     // ensure all threads are done
     for (unsigned int i = 0; i < thread_no; i++)
     {
         pthread_join(ids[i], NULL);
-        //thread_gavup(&attr);
     }
 
     if (close(fifo_file) == -1)
@@ -213,6 +212,7 @@ int main(int argc, char **argv)
     }
 
     pthread_mutex_destroy(&mutex);
+    // kill all threads
     pthread_exit(NULL);
 
     return 0;

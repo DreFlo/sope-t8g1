@@ -1,6 +1,8 @@
 #ifndef MP2_1_CLIENT_UTILS_H_
 #define MP2_1_CLIENT_UTILS_H_
 #define MAX_OP_LEN 6
+#define MAX_RANDOM_NUMBER 1000
+
 
 #include "./stdio.h"
 #include "./stdlib.h"
