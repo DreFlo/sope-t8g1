@@ -7,39 +7,39 @@ void output(Message *msg, Operation op)
     switch (op)
     {
     case IWANT:
-        sprintf(op_string, "IWANT");
+        snprintf(op_string, MAX_OP_LEN, "IWANT");
         break;
     case RECVD:
-        sprintf(op_string, "RECVD");
+        snprintf(op_string, MAX_OP_LEN, "RECVD");
         break;
     case TSKEX:
-        sprintf(op_string, "TSKEX");
+        snprintf(op_string, MAX_OP_LEN, "TSKEX");
         break;
     case TSKDN:
-        sprintf(op_string, "TSKDN");
+        snprintf(op_string, MAX_OP_LEN, "TSKDN");
         break;
     case GOTRS:
-        sprintf(op_string, "GOTRS");
+        snprintf(op_string, MAX_OP_LEN, "GOTRS");
         break;
     case LATE:
-        sprintf(op_string, "2LATE");
+        snprintf(op_string, MAX_OP_LEN, "2LATE");
         break;
     case CLOSD:
-        sprintf(op_string, "CLOSD");
+        snprintf(op_string, MAX_OP_LEN, "CLOSD");
         break;
     case GAVUP:
-        sprintf(op_string, "GAVUP");
+        snprintf(op_string, MAX_OP_LEN, "GAVUP");
         break;
     case FAILD:
-        sprintf(op_string, "FAILD");
+        snprintf(op_string, MAX_OP_LEN, "FAILD");
         break;
     };
 
     char output[200];
-    if (sprintf(output, "%ld; %d; %d; %d; %lu; %d; %s\n", time(NULL), msg->rid, msg->tskload, msg->pid, msg->tid, msg->tskres, op_string) < 0)
+    if (snprintf(output, sizeof(output), "%ld; %d; %d; %d; %lu; %d; %s\n", time(NULL), msg->rid, msg->tskload, msg->pid, msg->tid, msg->tskres, op_string) < 0)
     {
         free(msg);
-        perror("[client] sprintf failed in output");
+        perror("[client] snprintf failed in output");
         exit(EXIT_FAILURE);
     }
 

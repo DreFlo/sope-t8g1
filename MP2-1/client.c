@@ -95,7 +95,7 @@ void *thread_rot(void *arg)
 
     if (num < 0)
     {
-        perror("[client] faled to read private fifo");
+        perror("[client] failed to read private fifo");
         exit(EXIT_FAILURE);
     }
     else if (msg.tskres == -1)
@@ -203,6 +203,7 @@ int main(int argc, char **argv)
     for (unsigned int i = 0; i < thread_no; i++)
     {
         pthread_join(ids[i], NULL);
+        //thread_gavup(&attr);
     }
 
     if (close(fifo_file) == -1)
