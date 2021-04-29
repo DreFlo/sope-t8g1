@@ -29,6 +29,6 @@ typedef enum
  */
 void output(Message *msg, Operation op);
 
-void *thread_gavup(void *arg);
+void thread_gavup(void *arg);
 
 #endif // MP2_1_CLIENT_UTILS_H_

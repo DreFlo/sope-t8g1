@@ -36,19 +36,34 @@ void print_usage()
  */
 void *thread_rot(void *arg)
 {
+    // block SIGPIPE and SIGALRM to ensure only main thread handles them
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGPIPE);
+    sigaddset(&set, SIGALRM);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+
+
     // store request number locally and free arg pointer
     int i = *(int *)arg;
     free(arg);
+
+    //------------------------------------
 
     char thread_fifo_path[256];
     int thread_fifo;
     int t = random() % 9 + 1;
 
+    // set GAVUP message in case of timeout
+    Message gavup_msg = {i, getpid(), pthread_self(), t, -1};
+
+    pthread_cleanup_push(thread_gavup, (void *) &gavup_msg);
+
+    //-------------------------------------
+
     Message msg = {i, getpid(), pthread_self(), t, -1};
 
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-
-    // format strings
+    // format string
     snprintf(thread_fifo_path, 256, "/tmp/%d.%lu", getpid(), pthread_self());
 
     if (mkfifo(thread_fifo_path, ALLPERMS) != 0)
@@ -68,10 +83,12 @@ void *thread_rot(void *arg)
 
     // end critical writing region
 
-    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+    // block SIGTERM used to terminate threads that havent made a request to server
+    sigemptyset(&set);
+    sigaddset(&set, SIGTERM);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
 
     // print request sent message
-
     if (num < 0)
     {
         perror("[client] failed to write in public fifo");
@@ -93,27 +110,24 @@ void *thread_rot(void *arg)
     msg.pid = getpid();
     msg.tid = pthread_self();
 
-    if (num < 0)
+    if (num <= 0)
     {
         perror("[client] failed to read private fifo");
         exit(EXIT_FAILURE);
     }
-    else if (num > 0)
+    else
     {
         if (msg.tskres == -1)
             output(&msg, CLOSD);
         else
             output(&msg, GOTRS);
     }
-    else
-        output(&msg, GAVUP);
 
     // close and remove private fifo
     if (close(thread_fifo) != 0)
     {
         perror("[client] failed to close private fifo");
         exit(EXIT_FAILURE);
-        pthread_exit(NULL);
     }
 
     if (unlink(thread_fifo_path) != 0)
@@ -122,7 +136,8 @@ void *thread_rot(void *arg)
         exit(EXIT_FAILURE);
     }
 
-    pthread_exit(NULL);
+    pthread_cleanup_pop(0);
+
     return NULL;
 }
 
@@ -171,14 +186,10 @@ int main(int argc, char **argv)
     srandom(time(NULL));
 
     // Timeout set to 5 seconds
-    alarm(5);
+    alarm(runtime);
 
     // open fifo, waits for server
-    while ((fifo_file = open(fifoname, O_WRONLY)) < 0)
-        ;
-
-    // Disable alarm
-    alarm(0);
+    while ((fifo_file = open(fifoname, O_WRONLY)) < 0);
 
     // create threads
     while (time(NULL) < start_time + runtime)
@@ -204,6 +215,9 @@ int main(int argc, char **argv)
     {
         pthread_join(ids[i], NULL);
     }
+
+    // Disable alarm
+    alarm(0);
 
     if (close(fifo_file) == -1)
     {

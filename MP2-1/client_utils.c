@@ -46,8 +46,7 @@ void output(Message *msg, Operation op)
     printf("%s", output);
 }
 
-void *thread_gavup(void *arg)
+void thread_gavup(void *arg)
 {
     output((Message *)arg, GAVUP);
-    return NULL;
 }
