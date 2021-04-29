@@ -29,12 +29,21 @@ typedef enum
 } Operation;
 
 /**
+ * @brief Prints the format of the command line arguments of the program and exits. 
+ */
+void print_usage();
+
+/**
  * @brief Prints operation register
  * @param msg Struct that contains the message passed between client and server
  * @param op Operation to register
  */
 void output(Message *msg, Operation op);
 
+/**
+ * @brief Routine used when thread is cancelled 
+ * @param arg Pointer to a Cancelation struct
+ */
 void thread_gavup(void *arg);
 
 #endif // MP2_1_CLIENT_UTILS_H_

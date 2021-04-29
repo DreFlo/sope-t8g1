@@ -12,22 +12,11 @@
 #include "client_utils.h"
 #include "client_signals.h"
 
-unsigned int thread_no = 0;
-int fifo_file;
+unsigned int thread_no = 0; /* number of threads in the process */
+int fifo_file;  /* public fifo file descriptor */
 
-pthread_t ids[1024];
-pthread_mutex_t mutex;
-
-/**
- * @brief Prints the format of the command line arguments of the program and exits. 
- */
-void print_usage()
-{
-    printf("Usage: c <-t nsecs> fifoname\n\n");
-    printf("nsecs - number of seconds (approx.) the program will run\n");
-    printf("fifoname - name (absolute or relative) of the public channel through which the Client sends requests to the Server\n\n");
-    exit(EXIT_SUCCESS);
-}
+pthread_t ids[1024];    /* array with thread ids */
+pthread_mutex_t mutex;  /* mutex for writing to public fifo */
 
 /**
  * @brief Worker thread function. Handles all an individual thread does.
@@ -43,13 +32,13 @@ void *thread_rot(void *arg)
     sigaddset(&set, SIGALRM);
     pthread_sigmask(SIG_BLOCK, &set, NULL);
 
-
     // store request number locally and free arg pointer
     int i = *(int *)arg;
     free(arg);
 
     //------------------------------------
 
+    // create and assign needed member variables 
     char * thread_fifo_path = (char *) malloc(256);
     int thread_fifo;
     int t = random() % 9 + 1;
@@ -66,7 +55,7 @@ void *thread_rot(void *arg)
     }
 
     // write info to public fifo
-    // begin critical writing region
+    // begin critical writing region---------------------------
 
     pthread_mutex_lock(&mutex);
 
@@ -74,7 +63,7 @@ void *thread_rot(void *arg)
 
     pthread_mutex_unlock(&mutex);
 
-    // end critical writing region
+    // end critical writing region-----------------------------
 
     // set GAVUP message in case of timeout
     Cancelation * gavup_msg = malloc(sizeof(Cancelation));
@@ -88,7 +77,7 @@ void *thread_rot(void *arg)
 
     pthread_cleanup_push(thread_gavup, (void *) gavup_msg);
 
-    // block SIGTERM used to terminate threads that havent made a request to server
+    // block SIGTERM (used to terminate threads that haven't made a request to server)
     sigemptyset(&set);
     sigaddset(&set, SIGTERM);
     pthread_sigmask(SIG_BLOCK, &set, NULL);
@@ -112,7 +101,7 @@ void *thread_rot(void *arg)
     // read server response
     num = read(thread_fifo, (void *)&msg, sizeof(Message));
 
-    // thread already received response
+    // thread already received response, disable GAVUP
     pthread_cleanup_pop(0);
 
     msg.pid = getpid();
@@ -158,9 +147,6 @@ int main(int argc, char **argv)
     struct sigaction sighandler;
     sigset_t smask;
 
-    // save program start time
-    time_t start_time = time(NULL);
-
     // init mutex
     pthread_mutex_init(&mutex, NULL);
 
@@ -194,14 +180,14 @@ int main(int argc, char **argv)
     // set random seed
     srandom(time(NULL));
 
-    // timeout set
+    // set timeout
     alarm(runtime);
 
     // open fifo, waits for server
     while ((fifo_file = open(fifoname, O_WRONLY)) < 0);
 
     // create threads
-    while (1/*time(NULL) < start_time + runtime*/)
+    while (1)
     {
         // create interval between thread creation
         struct timespec wait_time;
@@ -215,26 +201,8 @@ int main(int argc, char **argv)
 
         pthread_create(&ids[thread_no], NULL, thread_rot, i_ptr);
 
-        /*pthread_detach(ids[thread_no]);*/
         thread_no++;
     }
-
-    // ensure all threads are done
-    for (unsigned int i = 0; i < thread_no; i++)
-    {
-        pthread_join(ids[i], NULL);
-    }
-
-    // disable alarm
-    alarm(0);
-
-    if (close(fifo_file) == -1)
-    {
-        perror("[client] failed to close main fifo");
-        exit(EXIT_FAILURE);
-    }
-
-    pthread_mutex_destroy(&mutex);
 
     return 0;
 }

@@ -14,6 +14,14 @@ void sigpipe_handler()
         pthread_join(ids[i], NULL);
     }
 
+    if (close(fifo_file) == -1)
+    {
+        perror("[client] failed to close main fifo");
+        exit(EXIT_FAILURE);
+    }
+
+    pthread_mutex_destroy(&mutex);
+
     exit(EXIT_SUCCESS);
 }
 
@@ -23,7 +31,6 @@ void sigalrm_handler()
 
     for (unsigned int i = 0; i < thread_no; i++)
     {
-        fprintf(stderr, "%u\n", i);
         pthread_cancel(ids[i]);
     }
 
@@ -31,6 +38,14 @@ void sigalrm_handler()
     {
         pthread_join(ids[i], NULL);
     }
+
+    if (close(fifo_file) == -1)
+    {
+        perror("[client] failed to close main fifo");
+        exit(EXIT_FAILURE);
+    }
+
+    pthread_mutex_destroy(&mutex);
 
     exit(EXIT_SUCCESS);
 }

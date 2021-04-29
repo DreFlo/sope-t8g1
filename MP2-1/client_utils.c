@@ -1,5 +1,13 @@
 #include "client_utils.h"
 
+void print_usage()
+{
+    printf("Usage: c <-t nsecs> fifoname\n\n");
+    printf("nsecs - number of seconds (approx.) the program will run\n");
+    printf("fifoname - name (absolute or relative) of the public channel through which the Client sends requests to the Server\n\n");
+    exit(EXIT_SUCCESS);
+}
+
 void output(Message *msg, Operation op)
 {
     char op_string[MAX_OP_LEN];
@@ -49,8 +57,11 @@ void output(Message *msg, Operation op)
 void thread_gavup(void *arg)
 {
     Cancelation c = *(Cancelation *) arg;
+
+    // print GAVUP message
     output(&c.msg, GAVUP);
 
+    // remove private fifo
     if (unlink(c.fifopath) != 0)
     {
         perror("[client] failed to unlink private fifo");
