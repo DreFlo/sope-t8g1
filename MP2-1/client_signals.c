@@ -23,6 +23,7 @@ void sigalrm_handler()
 
     for (unsigned int i = 0; i < thread_no; i++)
     {
+        fprintf(stderr, "%u\n", i);
         pthread_cancel(ids[i]);
     }
 
