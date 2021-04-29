@@ -1,49 +1,52 @@
 #include "client_utils.h"
 
-void output(Message *msg, Operation op){
+void output(Message *msg, Operation op)
+{
     char op_string[MAX_OP_LEN];
 
-    switch(op){
-        case IWANT:
-            sprintf(op_string, "IWANT");
-            break;
-        case RECVD:
-            sprintf(op_string, "RECVD");
-            break;
-        case TSKEX:
-            sprintf(op_string, "TSKEX");
-            break;
-        case TSKDN:
-            sprintf(op_string, "TSKDN");
-            break;
-        case GOTRS:
-            sprintf(op_string, "GOTRS");
-            break;
-        case LATE:
-            sprintf(op_string, "2LATE");
-            break;
-        case CLOSD:
-            sprintf(op_string, "CLOSD");
-            break;
-        case GAVUP:
-            sprintf(op_string, "GAVUP");
-            break;
-        case FAILD:
-            sprintf(op_string, "FAILD");
-            break;
+    switch (op)
+    {
+    case IWANT:
+        snprintf(op_string, MAX_OP_LEN, "IWANT");
+        break;
+    case RECVD:
+        snprintf(op_string, MAX_OP_LEN, "RECVD");
+        break;
+    case TSKEX:
+        snprintf(op_string, MAX_OP_LEN, "TSKEX");
+        break;
+    case TSKDN:
+        snprintf(op_string, MAX_OP_LEN, "TSKDN");
+        break;
+    case GOTRS:
+        snprintf(op_string, MAX_OP_LEN, "GOTRS");
+        break;
+    case LATE:
+        snprintf(op_string, MAX_OP_LEN, "2LATE");
+        break;
+    case CLOSD:
+        snprintf(op_string, MAX_OP_LEN, "CLOSD");
+        break;
+    case GAVUP:
+        snprintf(op_string, MAX_OP_LEN, "GAVUP");
+        break;
+    case FAILD:
+        snprintf(op_string, MAX_OP_LEN, "FAILD");
+        break;
     };
 
     char output[200];
-    if (sprintf(output, "%ld ; %d ; %d ; %d : %lu ; %d ; %s\n", time(NULL), msg->rid, msg->tskload, msg->pid, msg->tid, msg->tskres, op_string) < 0){
+    if (snprintf(output, sizeof(output), "%ld; %d; %d; %d; %lu; %d; %s\n", time(NULL), msg->rid, msg->tskload, msg->pid, msg->tid, msg->tskres, op_string) < 0)
+    {
         free(msg);
-        perror("[client] sprintf failed in output");
+        perror("[client] snprintf failed in output");
         exit(EXIT_FAILURE);
     }
 
     printf("%s", output);
 }
 
-void * thread_gavup(void * arg) {
-    output((Message *) arg, GAVUP);
-    return NULL;
+void thread_gavup(void *arg)
+{
+    output((Message *)arg, GAVUP);
 }

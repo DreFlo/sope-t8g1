@@ -8,9 +8,9 @@
 #include <time.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include "common.h"
-#include "client_utils.h"
-#include "client_signals.h"
+#include "./common.h"
+#include "./client_utils.h"
+#include "./client_signals.h"
 
 unsigned int thread_no = 0;
 int fifo_file;
@@ -21,7 +21,8 @@ pthread_mutex_t mutex;
 /**
  * @brief Prints the format of the command line arguments of the program and exits. 
  */
-void print_usage() {
+void print_usage()
+{
     printf("Usage: c <-t nsecs> fifoname\n\n");
     printf("nsecs - number of seconds (approx.) the program will run\n");
     printf("fifoname - name (absolute or relative) of the public channel through which the Client sends requests to the Server\n\n");
@@ -33,23 +34,40 @@ void print_usage() {
  * @param arg Pointer to a request number
  * @return void* 
  */
-void *thread_rot(void *arg) {
+void *thread_rot(void *arg)
+{
+    // block SIGPIPE and SIGALRM to ensure only main thread handles them
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGPIPE);
+    sigaddset(&set, SIGALRM);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+
+
     // store request number locally and free arg pointer
-    int i = * (int *) arg;
+    int i = *(int *)arg;
     free(arg);
+
+    //------------------------------------
 
     char thread_fifo_path[256];
     int thread_fifo;
     int t = random() % 9 + 1;
 
+    // set GAVUP message in case of timeout
+    Message gavup_msg = {i, getpid(), pthread_self(), t, -1};
+
+    pthread_cleanup_push(thread_gavup, (void *) &gavup_msg);
+
+    //-------------------------------------
+
     Message msg = {i, getpid(), pthread_self(), t, -1};
 
-    pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
-
-    // format strings
+    // format string
     snprintf(thread_fifo_path, 256, "/tmp/%d.%lu", getpid(), pthread_self());
 
-    if (mkfifo(thread_fifo_path, ALLPERMS) != 0) {
+    if (mkfifo(thread_fifo_path, ALLPERMS) != 0)
+    {
         perror("[client] failed to create private fifo");
         exit(EXIT_FAILURE);
     }
@@ -59,61 +77,72 @@ void *thread_rot(void *arg) {
 
     pthread_mutex_lock(&mutex);
 
-    int num = write(fifo_file, (void *) &msg, sizeof(Message));
+    int num = write(fifo_file, (void *)&msg, sizeof(Message));
 
     pthread_mutex_unlock(&mutex);
 
     // end critical writing region
 
-    pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, NULL);
+    // block SIGTERM used to terminate threads that havent made a request to server
+    sigemptyset(&set);
+    sigaddset(&set, SIGTERM);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
 
     // print request sent message
-
-    if(num < 0){
+    if (num < 0)
+    {
         perror("[client] failed to write in public fifo");
         exit(EXIT_FAILURE);
     }
-    else if (num > 0){
+    else if (num > 0)
+    {
         Message r_msg = {i, getpid(), pthread_self(), t, -1};
         output(&r_msg, IWANT);
     }
 
     // open private fifo, waits for server
-    while ((thread_fifo = open(thread_fifo_path, O_RDONLY)) < 0);
+    while ((thread_fifo = open(thread_fifo_path, O_RDONLY)) < 0)
+        ;
 
-    // read server response 
-    num = read(thread_fifo, (void *) &msg, sizeof(Message));
+    // read server response
+    num = read(thread_fifo, (void *)&msg, sizeof(Message));
 
     msg.pid = getpid();
     msg.tid = pthread_self();
-    
-    if(num < 0){
-        perror("[client] faled to read private fifo");
+
+    if (num <= 0)
+    {
+        perror("[client] failed to read private fifo");
         exit(EXIT_FAILURE);
     }
-    else if (num > 0){
-        if(msg.tskres == -1) output(&msg, CLOSD);
-        else output(&msg, GOTRS);
-    }
-    else{
-    output(&msg, FAILD); //NOT SURE IF GAVUP
+    else
+    {
+        if (msg.tskres == -1)
+            output(&msg, CLOSD);
+        else
+            output(&msg, GOTRS);
     }
 
     // close and remove private fifo
-    if (close(thread_fifo) != 0) {
+    if (close(thread_fifo) != 0)
+    {
         perror("[client] failed to close private fifo");
         exit(EXIT_FAILURE);
     }
 
-    if (unlink(thread_fifo_path) != 0) {
+    if (unlink(thread_fifo_path) != 0)
+    {
         perror("[client] failed to unlink private fifo");
         exit(EXIT_FAILURE);
     }
 
+    pthread_cleanup_pop(0);
+
     return NULL;
 }
 
-int main(int argc, char ** argv) {
+int main(int argc, char **argv)
+{
     char fifoname[256]; /* public fifo path */
     unsigned runtime;   /* max program running time */
 
@@ -128,7 +157,8 @@ int main(int argc, char ** argv) {
 
     // check and read command line arguments
 
-    if (argc != 4 || strcmp(argv[1], "-t") != 0) print_usage();
+    if (argc != 4 || strcmp(argv[1], "-t") != 0)
+        print_usage();
 
     sscanf(argv[2], "%u", &runtime);
     sscanf(argv[3], "%s", fifoname);
@@ -156,16 +186,14 @@ int main(int argc, char ** argv) {
     srandom(time(NULL));
 
     // Timeout set to 5 seconds
-    alarm(5);
+    alarm(runtime);
 
     // open fifo, waits for server
     while ((fifo_file = open(fifoname, O_WRONLY)) < 0);
 
-    // Disable alarm
-    alarm(0);
-
     // create threads
-    while (time(NULL) < start_time + runtime) {
+    while (time(NULL) < start_time + runtime)
+    {
         // create interval between thread creation
         struct timespec wait_time;
         wait_time.tv_sec = 0;
@@ -173,25 +201,33 @@ int main(int argc, char ** argv) {
         nanosleep(&wait_time, NULL);
 
         // save thread number independent variable
-        int * i_ptr = malloc(sizeof(int));
+        int *i_ptr = malloc(sizeof(int));
         *i_ptr = thread_no;
 
         pthread_create(&ids[thread_no], NULL, thread_rot, i_ptr);
 
+        /*pthread_detach(ids[thread_no]);*/
         thread_no++;
     }
 
     // ensure all threads are done
-    for (unsigned int i = 0; i < thread_no; i++) {
+    for (unsigned int i = 0; i < thread_no; i++)
+    {
         pthread_join(ids[i], NULL);
     }
 
-    if (close(fifo_file) == -1) {
+    // Disable alarm
+    alarm(0);
+
+    if (close(fifo_file) == -1)
+    {
         perror("[client] failed to close main fifo");
         exit(EXIT_FAILURE);
     }
 
     pthread_mutex_destroy(&mutex);
+    // kill all threads
+    pthread_exit(NULL);
 
     return 0;
 }
