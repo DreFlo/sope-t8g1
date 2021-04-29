@@ -2,7 +2,7 @@
 
 void sigpipe_handler()
 {
-    fprintf(stderr, "[client] server closed pipe\n");
+    fprintf(stdout, "[client] server closed pipe\n");
 
     for (unsigned int i = 0; i < thread_no; i++)
     {
@@ -27,7 +27,7 @@ void sigpipe_handler()
 
 void sigalrm_handler()
 {
-    fprintf(stderr, "[client] client timeout\n");
+    fprintf(stdout, "[client] client timeout\n");
 
     for (unsigned int i = 0; i < thread_no; i++)
     {

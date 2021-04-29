@@ -69,4 +69,5 @@ void thread_gavup(void *arg)
     }
 
     free(c.fifopath);
+    free(arg);
 }
