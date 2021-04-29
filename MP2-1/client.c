@@ -149,6 +149,9 @@ int main(int argc, char **argv)
     struct sigaction sighandler;
     sigset_t smask;
 
+    // save program start time
+    time_t start_time = time(NULL);
+
     // init mutex
     pthread_mutex_init(&mutex, NULL);
 
@@ -187,9 +190,6 @@ int main(int argc, char **argv)
 
     // open fifo, waits for server
     while ((fifo_file = open(fifoname, O_WRONLY)) < 0);
-
-    // save program start time
-    time_t start_time = time(NULL);
 
     // create threads
     while (time(NULL) < start_time + runtime)
