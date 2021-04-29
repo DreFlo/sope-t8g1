@@ -54,13 +54,6 @@ void *thread_rot(void *arg)
     int thread_fifo;
     int t = random() % 9 + 1;
 
-    // set GAVUP message in case of timeout
-    Message gavup_msg = {i, getpid(), pthread_self(), t, -1};
-
-    pthread_cleanup_push(thread_gavup, (void *) &gavup_msg);
-
-    //-------------------------------------
-
     Message msg = {i, getpid(), pthread_self(), t, -1};
 
     // format string
@@ -82,6 +75,17 @@ void *thread_rot(void *arg)
     pthread_mutex_unlock(&mutex);
 
     // end critical writing region
+
+    // set GAVUP message in case of timeout
+    Message * gavup_msg = malloc(sizeof(Message));
+
+    gavup_msg->pid = getpid();
+    gavup_msg->rid = i;
+    gavup_msg->tid = pthread_self();
+    gavup_msg->tskload = t;
+    gavup_msg->tskres = -1;
+
+    pthread_cleanup_push(thread_gavup, (void *) gavup_msg);
 
     // block SIGTERM used to terminate threads that havent made a request to server
     sigemptyset(&set);
@@ -106,6 +110,9 @@ void *thread_rot(void *arg)
 
     // read server response
     num = read(thread_fifo, (void *)&msg, sizeof(Message));
+
+    // thread already received response
+    pthread_cleanup_pop(0);
 
     msg.pid = getpid();
     msg.tid = pthread_self();
@@ -136,7 +143,7 @@ void *thread_rot(void *arg)
         exit(EXIT_FAILURE);
     }
 
-    pthread_cleanup_pop(0);
+    free(gavup_msg);
 
     return NULL;
 }
