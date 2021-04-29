@@ -8,9 +8,9 @@
 #include <time.h>
 #include <unistd.h>
 #include <stdbool.h>
-#include "./common.h"
-#include "./client_utils.h"
-#include "./client_signals.h"
+#include "common.h"
+#include "client_utils.h"
+#include "client_signals.h"
 
 unsigned int thread_no = 0;
 int fifo_file;
@@ -50,7 +50,7 @@ void *thread_rot(void *arg)
 
     //------------------------------------
 
-    char thread_fifo_path[256];
+    char * thread_fifo_path = (char *) malloc(256);
     int thread_fifo;
     int t = random() % 9 + 1;
 
@@ -77,13 +77,14 @@ void *thread_rot(void *arg)
     // end critical writing region
 
     // set GAVUP message in case of timeout
-    Message * gavup_msg = malloc(sizeof(Message));
+    Cancelation * gavup_msg = malloc(sizeof(Cancelation));
 
-    gavup_msg->pid = getpid();
-    gavup_msg->rid = i;
-    gavup_msg->tid = pthread_self();
-    gavup_msg->tskload = t;
-    gavup_msg->tskres = -1;
+    gavup_msg->msg.pid = getpid();
+    gavup_msg->msg.tid = pthread_self();
+    gavup_msg->msg.rid = i;
+    gavup_msg->msg.tskload = t;
+    gavup_msg->msg.tskres = -1;
+    gavup_msg->fifopath = thread_fifo_path;
 
     pthread_cleanup_push(thread_gavup, (void *) gavup_msg);
 
@@ -144,6 +145,7 @@ void *thread_rot(void *arg)
     }
 
     free(gavup_msg);
+    free(thread_fifo_path);
 
     return NULL;
 }

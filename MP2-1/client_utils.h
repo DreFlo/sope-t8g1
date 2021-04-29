@@ -4,10 +4,16 @@
 #define MAX_RANDOM_NUMBER 1000
 
 
-#include "./stdio.h"
-#include "./stdlib.h"
-#include "./common.h"
-#include "./time.h"
+#include "stdio.h"
+#include "stdlib.h"
+#include "common.h"
+#include "time.h"
+#include <unistd.h>
+
+typedef struct {
+	Message msg;
+	char * fifopath;
+} Cancelation;
 
 typedef enum
 {

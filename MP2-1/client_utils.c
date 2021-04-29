@@ -48,5 +48,14 @@ void output(Message *msg, Operation op)
 
 void thread_gavup(void *arg)
 {
-    output((Message *)arg, GAVUP);
+    Cancelation c = *(Cancelation *) arg;
+    output(&c.msg, GAVUP);
+
+    if (unlink(c.fifopath) != 0)
+    {
+        perror("[client] failed to unlink private fifo");
+        exit(EXIT_FAILURE);
+    }
+
+    free(c.fifopath);
 }
