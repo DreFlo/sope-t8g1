@@ -199,7 +199,7 @@ int main(int argc, char **argv)
     while ((fifo_file = open(fifoname, O_WRONLY)) < 0);
 
     // create threads
-    while (time(NULL) < start_time + runtime)
+    while (1/*time(NULL) < start_time + runtime*/)
     {
         // create interval between thread creation
         struct timespec wait_time;
