@@ -22,8 +22,8 @@ Source files:
 ### Implementation Details
 
 * In order to ensure the main thread handles both SIGPIPE and SIGALRM signals, the request threads block those signals.
-* In the sigpipe_handler() function we are sending signals to threads to finish them, so that if a request has already been made to the Server, the signal is blocked.
-* When timeout occurs, the threads are cancelled and the function pthread_cleanup_push() accuses the GAVUP event.
+* In the sigpipe_handler() function we are sending signals to threads to finish them, if a request has already been made to the Server, the signal is blocked.
+* When timeout occurs, the threads are cancelled and the function thread_gavup(), pushed to the thread cleanup stack, accuses the GAVUP event.
 
 ### Group Members and Self Evaluation
 
