@@ -1,0 +1,65 @@
+Initial time: 1620813371, expected final time: 1620813381
+
+Got: nsecs=10, fifoname=/tmp/fifo_skoubou9
+[client] created client fifo /tmp/18524.140084740474624
+[client] created client fifo /tmp/18524.140084732081920
+[client] created client fifo /tmp/18524.140084653324032
+[client] created client fifo /tmp/18524.140084644931328
+[client] created client fifo /tmp/18524.140084636538624
+[client] created client fifo /tmp/18524.140084628145920
+[client] created client fifo /tmp/18524.140084619753216
+[client] created client fifo /tmp/18524.140084611360512
+[client] created client fifo /tmp/18524.140084602967808
+[client] created client fifo /tmp/18524.140084049344256
+[client] created client fifo /tmp/18524.140084040951552
+[client] created client fifo /tmp/18524.140084032558848
+[client] created client fifo /tmp/18524.140084024166144
+[client] created client fifo /tmp/18524.140084015773440
+[client] created client fifo /tmp/18524.140084007380736
+[client] created client fifo /tmp/18524.140083998988032
+[client] created client fifo /tmp/18524.140083512473344
+[client] created client fifo /tmp/18524.140083504080640
+[client] created client fifo /tmp/18524.140083495687936
+[client] created client fifo /tmp/18524.140083487295232
+[client] server pipe closed
+[client] write serverfifo: Broken pipe
+[client] stopped creating requests
+[client] cancelled thread 140084636538624.
+[client] cancelled thread 140083998988032.
+[client] cancelled thread 140084040951552.
+[client] cancelled thread 140084653324032.
+[Client] Called clean-up handler
+[Client] Called clean-up handler
+[Client] Called clean-up handler
+[client] cancelled thread 140084644931328.
+[client] cancelled thread 140084740474624.
+[client] cancelled thread 140083512473344.
+[Client] Called clean-up handler
+[Client] Called clean-up handler
+[Client] Called clean-up handler
+[Client] Called clean-up handler
+[client] cancelled thread 140084732081920.
+[client] cancelled thread 140084049344256.
+[Client] Called clean-up handler
+[Client] Called clean-up handler
+[Client] Called clean-up handler
+[client] cancelled thread 140084611360512.
+[client] cancelled thread 140083495687936.
+[client] cancelled thread 140084024166144.
+[Client] Called clean-up handler
+[Client] Called clean-up handler
+[Client] Called clean-up handler
+[client] cancelled thread 140084619753216.
+[client] cancelled thread 140084015773440.
+[client] cancelled thread 140084032558848.
+[Client] Called clean-up handler
+[client] cancelled thread 140083504080640.
+[Client] Called clean-up handler
+[Client] Called clean-up handler
+[Client] Called clean-up handler
+[client] cancelled thread 140084007380736.
+[client] cancelled thread 140084602967808.
+[client] cancelled thread 140084628145920.
+[Client] Called clean-up handler
+[Client] Called clean-up handler
+[client] main terminating
