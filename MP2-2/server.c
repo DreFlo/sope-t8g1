@@ -15,7 +15,7 @@
 
 unsigned int thread_no = 0;
 char *fifoname;
-pthread_t ids[1024];
+pthread_t ids[4098];
 unsigned buffer_length = 1;
 ServerMessage *buffer;
 sem_t semaphore;
@@ -27,44 +27,47 @@ void *worker_thread_rot(void *wmsg)
     WorkerMessage *wmsgtemp = (WorkerMessage *)wmsg;
 
     Message msg = wmsgtemp->msg;
-    //int i = wmsgtemp->i;
 
     // Send to library
 
     msg.tskres = task(msg.tskload);
 
     ServerMessage smsg;
-    smsg.s_pid = getpid();
-    smsg.s_tid = pthread_self();
+    smsg.s_pid = msg.pid;
+    smsg.s_tid = msg.tid;
+
+    msg.pid = getpid();
+    msg.tid = pthread_self();
+    msg.rid = wmsgtemp->i;
     smsg.msg = msg;
-    printf("BEF\n");
 
     enqueue(smsg);
 
-    printf("AFTER\n");
     output(&msg, TSKEX);
 
-    pthread_join(pthread_self(), NULL);
+    free(wmsg);
 
     return NULL;
 } 
 
-void *consumer_thread()
+void *consumer_thread(void * arg)
 {
-    ServerMessage *smsg = NULL;
+    ServerMessage smsg;
 
-    dequeue(smsg);
+    while(1) {
+        dequeue(&smsg);
+        printf("Dequeued: %d %lu\n", smsg.s_pid, smsg.s_tid);
 
-    if(smsg != NULL){
         int p_fifo;
-        char fifoname[256];
-        snprintf(fifoname, sizeof(fifoname),"/tmp/%d.%lu", smsg->msg.pid, smsg->msg.tid);
-
-        if ((p_fifo = open(fifoname, O_WRONLY)) < 0)
-            perror("Could not open fifo!");
-
-        write(p_fifo, (void*) &smsg->msg, sizeof(smsg->msg));
-        
+        char private_fifoname[256];
+        snprintf(private_fifoname, 256 * sizeof(char),"/tmp/%d.%lu", smsg.s_pid, smsg.s_tid);
+        printf("Opening fifo: %s\n", private_fifoname);
+        while ((p_fifo = open(private_fifoname, O_WRONLY)) < 0) {
+        }
+        printf("FIFO opened\n");
+        write(p_fifo, (void*) &smsg.msg, sizeof(Message));
+        output(&smsg.msg, TSKDN);
+        printf("Wrote to fifo\n\n");
     }
     
     return NULL;
@@ -91,14 +94,12 @@ int main(int argc, char **argv)
 
     buffer = malloc(buffer_length * sizeof(ServerMessage));
 
-    printf("ASDAS\n");
-
     // Set signal handlers
     struct sigaction sighandler;
     sigset_t smask;
 
     if (sigemptyset(&smask) == -1)
-        perror("[client] sigsetfunctions()");
+        perror("[server] sigsetfunctions()");
     sighandler.sa_handler = sigalrm_handler;
     sighandler.sa_mask = smask;
     sighandler.sa_flags = 0;
@@ -125,11 +126,19 @@ int main(int argc, char **argv)
 
     pthread_create(&c_id, NULL, consumer_thread, NULL);
 
-    while (index_buffer < buffer_length)
+    while (1)
     {
-        if (read(fd, msg, sizeof(Message)) < 0)
+        if (read(fd, msg, sizeof(Message)) < 0) {
             perror("Could not read the message from FIFO!");
+            break;
+        }
+        Message output_msg = *(Message *)msg;
 
+        output_msg.rid = thread_no;
+        output_msg.pid = getpid();
+        output_msg.tid = pthread_self();
+
+        output(&output_msg, RECVD);
 
         WorkerMessage *wmsg = malloc(sizeof(WorkerMessage));
         wmsg->i = thread_no;

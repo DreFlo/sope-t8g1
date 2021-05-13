@@ -5,7 +5,10 @@ int index_buffer = 0;
 void enqueue(ServerMessage s_msg) {
     if(sem_wait(&semaphore) < 0) perror("sem_wait() error");
 
+    printf("Incoming server msg: %d %lu\n", s_msg.s_pid, s_msg.s_tid);
+
     buffer[index_buffer] = s_msg;
+    printf("Stored server msg: %d %lu\n", buffer[index_buffer].s_pid, buffer[index_buffer].s_tid);
     index_buffer++;
 
 }
@@ -17,6 +20,8 @@ void dequeue(ServerMessage *s_msg) {
         sem_getvalue(&semaphore, &semaphoreval);
     } while( semaphoreval >= buffer_length );
 
+    printf("Queue pushing: %d %lu\n", buffer[0].s_pid, buffer[0].s_tid);
+
     *s_msg = buffer[0];
 
     for(int i = 1; i < index_buffer; i++) {
@@ -25,6 +30,8 @@ void dequeue(ServerMessage *s_msg) {
     index_buffer--;
 
     if(sem_post(&semaphore) < 0) perror("sem_post() error");
+    
+    printf("Left\n");
 }
 
 void output(Message *msg, Operation op)
