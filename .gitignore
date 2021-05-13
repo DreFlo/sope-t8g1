@@ -5,7 +5,7 @@ c
 .vscode
 !server.o
 !lib.o
-MP2-1/server_log.txt
-MP2-1/client_log.txt
-MP2-1/server_stderr.txt
-MP2-1/client_stderr.txt
+*/server_log.txt
+*/client_log.txt
+*/server_stderr.txt
+*/client_stderr.txt
