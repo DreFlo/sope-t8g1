@@ -20,8 +20,6 @@ void dequeue(ServerMessage *s_msg) {
         sem_getvalue(&semaphore, &semaphoreval);
     } while( semaphoreval >= buffer_length );
 
-    printf("Queue pushing: %d %lu\n", buffer[0].s_pid, buffer[0].s_tid);
-
     *s_msg = buffer[0];
 
     for(int i = 1; i < index_buffer; i++) {
@@ -30,8 +28,10 @@ void dequeue(ServerMessage *s_msg) {
     index_buffer--;
 
     if(sem_post(&semaphore) < 0) perror("sem_post() error");
-    
-    printf("Left\n");
+}
+
+bool queue_empty() {
+    return index_buffer == 0;
 }
 
 void output(Message *msg, Operation op)

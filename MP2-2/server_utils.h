@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdbool.h>
+
 #include "common.h"
 
 
@@ -40,6 +42,8 @@ extern sem_t semaphore;
 void enqueue(ServerMessage s_msg);
 
 void dequeue(ServerMessage *s_msg);
+
+bool queue_empty();
 
 /**
  * @brief Prints operation register

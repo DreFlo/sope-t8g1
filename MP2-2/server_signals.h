@@ -9,7 +9,14 @@
 #include <pthread.h>
 #include <unistd.h>
 
+#include "server_utils.h"
+
 extern char * fifoname;
+extern unsigned int thread_no;
+extern pthread_t ids[1024];
+extern pthread_t c_id;
+
+void sigpipe_handler();
 
 /**
  * @brief Handler for SIGALRM signal received when Client timesout 

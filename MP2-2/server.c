@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <stdbool.h>
 
 #include "common.h"
 #include "lib.h"
@@ -15,7 +16,7 @@
 
 unsigned int thread_no = 0;
 char *fifoname;
-pthread_t ids[4098];
+pthread_t ids[1024];
 unsigned buffer_length = 1;
 ServerMessage *buffer;
 sem_t semaphore;
@@ -56,18 +57,15 @@ void *consumer_thread(void * arg)
 
     while(1) {
         dequeue(&smsg);
-        printf("Dequeued: %d %lu\n", smsg.s_pid, smsg.s_tid);
 
         int p_fifo;
         char private_fifoname[256];
         snprintf(private_fifoname, 256 * sizeof(char),"/tmp/%d.%lu", smsg.s_pid, smsg.s_tid);
-        printf("Opening fifo: %s\n", private_fifoname);
-        while ((p_fifo = open(private_fifoname, O_WRONLY)) < 0) {
+        if ((p_fifo = open(private_fifoname, O_WRONLY)) < 0) {
+            continue;
         }
-        printf("FIFO opened\n");
         write(p_fifo, (void*) &smsg.msg, sizeof(Message));
         output(&smsg.msg, TSKDN);
-        printf("Wrote to fifo\n\n");
     }
     
     return NULL;
@@ -105,7 +103,16 @@ int main(int argc, char **argv)
     sighandler.sa_flags = 0;
     if (sigaction(SIGALRM, &sighandler, NULL) == -1)
         perror("sigaction");
-
+    // SIGPIPE_HANDLER not working
+    /*
+    if (sigemptyset(&smask) == -1)
+        perror("[server] sigsetfunctions()");
+    sighandler.sa_handler = sigpipe_handler;
+    sighandler.sa_mask = smask;
+    sighandler.sa_flags = 0;
+    if (sigaction(SIGALRM, &sighandler, NULL) == -1)
+        perror("sigaction");
+*/
     // Semaphore creation
 
     sem_init(&semaphore, 0, buffer_length);
@@ -128,7 +135,8 @@ int main(int argc, char **argv)
 
     while (1)
     {
-        if (read(fd, msg, sizeof(Message)) < 0) {
+
+        if (read(fd, msg, sizeof(Message)) <= 0) {
             perror("Could not read the message from FIFO!");
             break;
         }
@@ -147,6 +155,16 @@ int main(int argc, char **argv)
 
         thread_no++;
     }
+
+    for (int i = 0; i < thread_no; i++) {
+        pthread_join(ids[i], NULL);
+    }
+
+    while(!queue_empty());
+
+    pthread_join(c_id, NULL);
+
+    unlink(fifoname);
 
     return 1;
 }
