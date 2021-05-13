@@ -5,10 +5,7 @@ int index_buffer = 0;
 void enqueue(ServerMessage s_msg) {
     if(sem_wait(&semaphore) < 0) perror("sem_wait() error");
 
-    printf("Incoming server msg: %d %lu\n", s_msg.s_pid, s_msg.s_tid);
-
     buffer[index_buffer] = s_msg;
-    printf("Stored server msg: %d %lu\n", buffer[index_buffer].s_pid, buffer[index_buffer].s_tid);
     index_buffer++;
 
 }
