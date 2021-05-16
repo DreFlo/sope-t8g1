@@ -5,6 +5,9 @@ void sigpipe_handler() {
 }
 
 void sigalrm_handler() {
+    show = true;
+    while (!queue_empty());
+    
     unlink(fifoname);
     exit(EXIT_SUCCESS);
 }

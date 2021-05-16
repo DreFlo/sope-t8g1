@@ -1,6 +1,7 @@
 #include "server_utils.h"
 
 int index_buffer = 0;
+bool show = false;
 
 void enqueue(ServerMessage s_msg) {
     if(sem_wait(&semaphore) < 0) perror("sem_wait() error");
@@ -28,6 +29,7 @@ void dequeue(ServerMessage *s_msg) {
 }
 
 bool queue_empty() {
+    if (show) printf("%d\n", index_buffer);
     return index_buffer <= 0;
 }
 

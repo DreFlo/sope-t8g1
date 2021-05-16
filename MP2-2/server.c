@@ -65,7 +65,7 @@ void *consumer_thread(void * arg)
             output(&smsg.msg, FAILD);
             continue;
         }
-        if (write(p_fifo, (void*) &smsg.msg, sizeof(Message)) >= 0)
+        if (write(p_fifo, (void*) &smsg.msg, sizeof(Message)) == sizeof(Message))
             output(&smsg.msg, TSKDN);
         else
             output(&smsg.msg, FAILD);

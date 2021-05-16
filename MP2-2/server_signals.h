@@ -15,6 +15,7 @@ extern char * fifoname;
 extern unsigned int thread_no;
 extern pthread_t ids[1024];
 extern pthread_t c_id;
+extern bool show;
 
 void sigpipe_handler();
 
