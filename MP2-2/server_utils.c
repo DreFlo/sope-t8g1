@@ -28,7 +28,7 @@ void dequeue(ServerMessage *s_msg) {
 }
 
 bool queue_empty() {
-    return index_buffer == 0;
+    return index_buffer <= 0;
 }
 
 void output(Message *msg, Operation op)

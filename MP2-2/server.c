@@ -62,10 +62,13 @@ void *consumer_thread(void * arg)
         char private_fifoname[256];
         snprintf(private_fifoname, 256 * sizeof(char),"/tmp/%d.%lu", smsg.s_pid, smsg.s_tid);
         if ((p_fifo = open(private_fifoname, O_WRONLY)) < 0) {
+            output(&smsg.msg, FAILD);
             continue;
         }
-        write(p_fifo, (void*) &smsg.msg, sizeof(Message));
-        output(&smsg.msg, TSKDN);
+        if (write(p_fifo, (void*) &smsg.msg, sizeof(Message)) >= 0)
+            output(&smsg.msg, TSKDN);
+        else
+            output(&smsg.msg, FAILD);
     }
     
     return NULL;
