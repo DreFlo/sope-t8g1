@@ -5,7 +5,10 @@ void sigpipe_handler() {
 }
 
 void sigalrm_handler() {
-    show = true;
+    close(fd);
+
+    too_late = true;
+
     while (!queue_empty());
     
     unlink(fifoname);

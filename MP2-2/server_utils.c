@@ -1,7 +1,7 @@
 #include "server_utils.h"
 
 int index_buffer = 0;
-bool show = false;
+int semaphoreval;
 
 void enqueue(ServerMessage s_msg) {
     if(sem_wait(&semaphore) < 0) perror("sem_wait() error");
@@ -13,7 +13,7 @@ void enqueue(ServerMessage s_msg) {
 
 
 void dequeue(ServerMessage *s_msg) {
-    int semaphoreval;
+    // wait while queue empty
     do {
         sem_getvalue(&semaphore, &semaphoreval);
     } while( semaphoreval >= buffer_length );
@@ -23,14 +23,19 @@ void dequeue(ServerMessage *s_msg) {
     for(int i = 1; i < index_buffer; i++) {
         buffer[i-1] = buffer[i];
     }
+
     index_buffer--;
 
     if(sem_post(&semaphore) < 0) perror("sem_post() error");
 }
 
 bool queue_empty() {
-    if (show) printf("%d\n", index_buffer);
-    return index_buffer <= 0;
+    /*
+    static unsigned use_no = 0;
+    use_no++;
+    if (use_no > 100000) return true;
+    */
+    return semaphoreval >= buffer_length;
 }
 
 void output(Message *msg, Operation op)

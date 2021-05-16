@@ -16,6 +16,7 @@
 
 unsigned int thread_no = 0;
 char *fifoname;
+int fd;
 pthread_t ids[1024];
 unsigned buffer_length = 1;
 ServerMessage *buffer;
@@ -23,8 +24,17 @@ sem_t semaphore;
 extern int index_buffer;
 pthread_t c_id;
 
+bool too_late = false;
+
 void *worker_thread_rot(void *wmsg)
 {
+    // block SIGPIPE and SIGALRM to ensure only main thread handles them
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGPIPE);
+    sigaddset(&set, SIGALRM);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+
     WorkerMessage *wmsgtemp = (WorkerMessage *)wmsg;
 
     Message msg = wmsgtemp->msg;
@@ -53,6 +63,13 @@ void *worker_thread_rot(void *wmsg)
 
 void *consumer_thread(void * arg)
 {
+    // block SIGPIPE and SIGALRM to ensure only main thread handles them
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGPIPE);
+    sigaddset(&set, SIGALRM);
+    pthread_sigmask(SIG_BLOCK, &set, NULL);
+
     ServerMessage smsg;
 
     while(1) {
@@ -61,14 +78,23 @@ void *consumer_thread(void * arg)
         int p_fifo;
         char private_fifoname[256];
         snprintf(private_fifoname, 256 * sizeof(char),"/tmp/%d.%lu", smsg.s_pid, smsg.s_tid);
+
+        if (too_late) {
+            output(&smsg.msg, LATE);
+            continue;
+        }
+
         if ((p_fifo = open(private_fifoname, O_WRONLY)) < 0) {
             output(&smsg.msg, FAILD);
             continue;
         }
-        if (write(p_fifo, (void*) &smsg.msg, sizeof(Message)) == sizeof(Message))
+        
+        if (write(p_fifo, (void*) &smsg.msg, sizeof(Message)) == sizeof(Message)) {
             output(&smsg.msg, TSKDN);
-        else
+        }
+        else {
             output(&smsg.msg, FAILD);
+        }
     }
     
     return NULL;
@@ -106,16 +132,14 @@ int main(int argc, char **argv)
     sighandler.sa_flags = 0;
     if (sigaction(SIGALRM, &sighandler, NULL) == -1)
         perror("sigaction");
-    // SIGPIPE_HANDLER not working
-    /*
+    // CAN CHANGED to ignore
     if (sigemptyset(&smask) == -1)
         perror("[server] sigsetfunctions()");
     sighandler.sa_handler = sigpipe_handler;
     sighandler.sa_mask = smask;
     sighandler.sa_flags = 0;
-    if (sigaction(SIGALRM, &sighandler, NULL) == -1)
+    if (sigaction(SIGPIPE, &sighandler, NULL) == -1)
         perror("sigaction");
-*/
     // Semaphore creation
 
     sem_init(&semaphore, 0, buffer_length);
@@ -124,7 +148,6 @@ int main(int argc, char **argv)
     if (mkfifo(fifoname, ALLPERMS) < 0)
         perror("Could not make fifo!");
 
-    int fd;
 
     if ((fd = open(fifoname, O_RDONLY)) < 0)
         perror("Could not open fifo!");
@@ -140,8 +163,7 @@ int main(int argc, char **argv)
     {
 
         if (read(fd, msg, sizeof(Message)) <= 0) {
-            perror("Could not read the message from FIFO!");
-            break;
+            continue;
         }
         Message output_msg = *(Message *)msg;
 
@@ -159,15 +181,5 @@ int main(int argc, char **argv)
         thread_no++;
     }
 
-    for (int i = 0; i < thread_no; i++) {
-        pthread_join(ids[i], NULL);
-    }
-
-    while(!queue_empty());
-
-    pthread_join(c_id, NULL);
-
-    unlink(fifoname);
-
-    return 1;
+    exit(EXIT_SUCCESS);
 }
