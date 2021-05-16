@@ -41,7 +41,7 @@ void *worker_thread_rot(void *wmsg)
 
     // Send to library
 
-    msg.tskres = task(msg.tskload);
+    msg.tskres = too_late ? -1 : task(msg.tskload);
 
     ServerMessage smsg;
     smsg.s_pid = msg.pid;
@@ -54,7 +54,7 @@ void *worker_thread_rot(void *wmsg)
 
     enqueue(smsg);
 
-    output(&msg, TSKEX);
+    if (!too_late) output(&msg, TSKEX);
 
     free(wmsg);
 
