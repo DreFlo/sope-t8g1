@@ -41,7 +41,7 @@ extern sem_t semaphore;
 
 void enqueue(ServerMessage s_msg);
 
-void dequeue(ServerMessage *s_msg);
+ServerMessage* dequeue();
 
 bool queue_empty();
 

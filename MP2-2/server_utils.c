@@ -1,41 +1,56 @@
 #include "server_utils.h"
 
-int index_buffer = 0;
+int front = -1;
+int rear = -1;
+int size = -1;
 int semaphoreval;
 
 void enqueue(ServerMessage s_msg) {
     if(sem_wait(&semaphore) < 0) perror("sem_wait() error");
 
-    buffer[index_buffer] = s_msg;
-    index_buffer++;
+    /*
+        Initialize the queue
+    */
+    if(size < 0) {
+        buffer[0] = s_msg;
+        front = rear = 0;
+        size = 1;
+    }
+    /*
+        When reachs end
+    */ 
+    else if (rear == buffer_length-1) {
+        buffer[0] = s_msg;
+        rear = 0;
+        size++;
+    } 
+    /*
+        Normal add to queue
+    */
+    else {
+        buffer[++rear] = s_msg;
+        size++;
+    }
 
 }
 
 
-void dequeue(ServerMessage *s_msg) {
+ServerMessage* dequeue() {
     // wait while queue empty
-    do {
-        sem_getvalue(&semaphore, &semaphoreval);
-    } while( semaphoreval >= buffer_length );
+    while(queue_empty());
 
-    *s_msg = buffer[0];
 
-    for(int i = 1; i < index_buffer; i++) {
-        buffer[i-1] = buffer[i];
-    }
-
-    index_buffer--;
+    ServerMessage* s_msg = malloc(sizeof(ServerMessage));
+    *s_msg = buffer[front++];
+    size--;
 
     if(sem_post(&semaphore) < 0) perror("sem_post() error");
+
+    return s_msg;
 }
 
 bool queue_empty() {
-    /*
-    static unsigned use_no = 0;
-    use_no++;
-    if (use_no > 100000) return true;
-    */
-    return semaphoreval >= buffer_length;
+    return size < 0;
 }
 
 void output(Message *msg, Operation op)

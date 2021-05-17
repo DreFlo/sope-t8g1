@@ -70,31 +70,32 @@ void *consumer_thread(void * arg)
     sigaddset(&set, SIGALRM);
     pthread_sigmask(SIG_BLOCK, &set, NULL);
 
-    ServerMessage smsg;
+    ServerMessage* smsg;
 
     while(1) {
-        dequeue(&smsg);
-
+        smsg = dequeue();
+        if(smsg == NULL) break;
+        smsg->msg.tid = pthread_self();
+        
         int p_fifo;
         char private_fifoname[256];
-        snprintf(private_fifoname, sizeof(private_fifoname),"/tmp/%d.%lu", smsg.s_pid, smsg.s_tid);
+        snprintf(private_fifoname, sizeof(private_fifoname),"/tmp/%d.%lu", smsg->s_pid, smsg->s_tid);
 
-        if ((p_fifo = open(private_fifoname, O_WRONLY)) < 0) {
-            output(&smsg.msg, FAILD);
-            continue;
-        }
+        p_fifo = open(private_fifoname, O_WRONLY);
 
-        int written_bytes = write(p_fifo, (void*) &smsg.msg, sizeof(Message));
+        int written_bytes = write(p_fifo, (void*) &smsg->msg, sizeof(Message));
         
-        if (written_bytes == sizeof(Message) && smsg.msg.tskres != -1) {
-            output(&smsg.msg, TSKDN);
+        if (written_bytes == sizeof(Message) && smsg->msg.tskres != -1) {
+            output(&smsg->msg, TSKDN);
         }
-        else if (written_bytes == sizeof(Message) && smsg.msg.tskres == -1) {
-            output(&smsg.msg, LATE);
+        else if (written_bytes == sizeof(Message) && smsg->msg.tskres == -1) {
+            output(&smsg->msg, LATE);
         }
         else {
-            output(&smsg.msg, FAILD);
+            output(&smsg->msg, FAILD);
         }
+
+        free(smsg);
     }
     
     return NULL;
