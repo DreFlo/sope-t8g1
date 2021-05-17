@@ -12,5 +12,6 @@ void sigalrm_handler() {
     while (!queue_empty());
     
     unlink(fifoname);
+    
     exit(EXIT_SUCCESS);
 }
