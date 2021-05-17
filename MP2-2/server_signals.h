@@ -18,8 +18,6 @@ extern pthread_t c_id;
 extern bool too_late;
 extern int fd;
 
-void sigpipe_handler();
-
 /**
  * @brief Handler for SIGALRM signal received when Client timesout 
  */

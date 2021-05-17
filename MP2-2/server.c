@@ -77,20 +77,20 @@ void *consumer_thread(void * arg)
 
         int p_fifo;
         char private_fifoname[256];
-        snprintf(private_fifoname, 256 * sizeof(char),"/tmp/%d.%lu", smsg.s_pid, smsg.s_tid);
-
-        if (too_late) {
-            output(&smsg.msg, LATE);
-            continue;
-        }
+        snprintf(private_fifoname, sizeof(private_fifoname),"/tmp/%d.%lu", smsg.s_pid, smsg.s_tid);
 
         if ((p_fifo = open(private_fifoname, O_WRONLY)) < 0) {
             output(&smsg.msg, FAILD);
             continue;
         }
+
+        int written_bytes = write(p_fifo, (void*) &smsg.msg, sizeof(Message));
         
-        if (write(p_fifo, (void*) &smsg.msg, sizeof(Message)) == sizeof(Message)) {
+        if (written_bytes == sizeof(Message) && smsg.msg.tskres != -1) {
             output(&smsg.msg, TSKDN);
+        }
+        else if (written_bytes == sizeof(Message) && smsg.msg.tskres == -1) {
+            output(&smsg.msg, LATE);
         }
         else {
             output(&smsg.msg, FAILD);
@@ -102,6 +102,10 @@ void *consumer_thread(void * arg)
 
 int main(int argc, char **argv)
 {
+    sigset_t set;
+    sigemptyset(&set);
+    sigaddset(&set, SIGPIPE);
+    sigprocmask(SIG_BLOCK, &set, NULL);
 
     // Check for arguments
     if (!(argc == 4 || argc == 6))
@@ -132,14 +136,6 @@ int main(int argc, char **argv)
     sighandler.sa_flags = 0;
     if (sigaction(SIGALRM, &sighandler, NULL) == -1)
         perror("sigaction");
-    // CAN CHANGED to ignore
-    if (sigemptyset(&smask) == -1)
-        perror("[server] sigsetfunctions()");
-    sighandler.sa_handler = sigpipe_handler;
-    sighandler.sa_mask = smask;
-    sighandler.sa_flags = 0;
-    if (sigaction(SIGPIPE, &sighandler, NULL) == -1)
-        perror("sigaction");
     // Semaphore creation
 
     sem_init(&semaphore, 0, buffer_length);
@@ -161,7 +157,6 @@ int main(int argc, char **argv)
 
     while (1)
     {
-
         if (read(fd, msg, sizeof(Message)) <= 0) {
             continue;
         }
