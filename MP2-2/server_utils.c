@@ -3,33 +3,38 @@
 int index_buffer = 0;
 int semaphoreval;
 
-void enqueue(ServerMessage s_msg) {
-    if(sem_wait(&semaphore) < 0) perror("sem_wait() error");
+void enqueue(ServerMessage s_msg)
+{
+    if (sem_wait(&semaphore) < 0)
+        perror("sem_wait() error");
 
     buffer[index_buffer] = s_msg;
     index_buffer++;
-
 }
 
-
-void dequeue(ServerMessage *s_msg) {
+void dequeue(ServerMessage *s_msg)
+{
     // wait while queue empty
-    do {
+    do
+    {
         sem_getvalue(&semaphore, &semaphoreval);
-    } while( semaphoreval >= buffer_length );
+    } while (semaphoreval >= buffer_length);
 
     *s_msg = buffer[0];
 
-    for(int i = 1; i < index_buffer; i++) {
-        buffer[i-1] = buffer[i];
+    for (int i = 1; i < index_buffer; i++)
+    {
+        buffer[i - 1] = buffer[i];
     }
 
     index_buffer--;
 
-    if(sem_post(&semaphore) < 0) perror("sem_post() error");
+    if (sem_post(&semaphore) < 0)
+        perror("sem_post() error");
 }
 
-bool queue_empty() {
+bool queue_empty()
+{
     /*
     static unsigned use_no = 0;
     use_no++;

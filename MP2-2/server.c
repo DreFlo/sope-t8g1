@@ -54,14 +54,15 @@ void *worker_thread_rot(void *wmsg)
 
     enqueue(smsg);
 
-    if (!too_late) output(&msg, TSKEX);
+    if (!too_late)
+        output(&msg, TSKEX);
 
     free(wmsg);
 
     return NULL;
-} 
+}
 
-void *consumer_thread(void * arg)
+void *consumer_thread(void *arg)
 {
     // block SIGPIPE and SIGALRM to ensure only main thread handles them
     sigset_t set;
@@ -72,31 +73,36 @@ void *consumer_thread(void * arg)
 
     ServerMessage smsg;
 
-    while(1) {
+    while (1)
+    {
         dequeue(&smsg);
 
         int p_fifo;
         char private_fifoname[256];
-        snprintf(private_fifoname, sizeof(private_fifoname),"/tmp/%d.%lu", smsg.s_pid, smsg.s_tid);
+        snprintf(private_fifoname, sizeof(private_fifoname), "/tmp/%d.%lu", smsg.s_pid, smsg.s_tid);
 
-        if ((p_fifo = open(private_fifoname, O_WRONLY)) < 0) {
+        if ((p_fifo = open(private_fifoname, O_WRONLY)) < 0)
+        {
             output(&smsg.msg, FAILD);
             continue;
         }
 
-        int written_bytes = write(p_fifo, (void*) &smsg.msg, sizeof(Message));
-        
-        if (written_bytes == sizeof(Message) && smsg.msg.tskres != -1) {
+        int written_bytes = write(p_fifo, (void *)&smsg.msg, sizeof(Message));
+
+        if (written_bytes == sizeof(Message) && smsg.msg.tskres != -1)
+        {
             output(&smsg.msg, TSKDN);
         }
-        else if (written_bytes == sizeof(Message) && smsg.msg.tskres == -1) {
+        else if (written_bytes == sizeof(Message) && smsg.msg.tskres == -1)
+        {
             output(&smsg.msg, LATE);
         }
-        else {
+        else
+        {
             output(&smsg.msg, FAILD);
         }
     }
-    
+
     return NULL;
 }
 
@@ -144,7 +150,6 @@ int main(int argc, char **argv)
     if (mkfifo(fifoname, ALLPERMS) < 0)
         perror("Could not make fifo!");
 
-
     if ((fd = open(fifoname, O_RDONLY)) < 0)
         perror("Could not open fifo!");
 
@@ -157,7 +162,8 @@ int main(int argc, char **argv)
 
     while (1)
     {
-        if (read(fd, msg, sizeof(Message)) <= 0) {
+        if (read(fd, msg, sizeof(Message)) <= 0)
+        {
             continue;
         }
         Message output_msg = *(Message *)msg;

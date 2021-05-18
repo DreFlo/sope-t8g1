@@ -24,4 +24,4 @@ extern int fd;
 void sigalrm_handler();
 
 
-#endif
+#endif //MP2_2_SERVER_SIGNALS_H_
