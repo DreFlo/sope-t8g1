@@ -27,9 +27,10 @@ bool all_threads_exited = false;
 char thread_id_file[1024];
 int thread_file;
 
-void handle_thread_id_file(void) {
+void handle_exit(void) {
     close(thread_file);
     unlink(thread_id_file);
+    pthread_mutex_destroy(&mutex);
 }
 
 void kill_all_worker_threads(void) {
@@ -37,10 +38,12 @@ void kill_all_worker_threads(void) {
     while(read(thread_file, &id, sizeof(pthread_t)) > 0) {
         pthread_join(id, NULL);
     }
+    all_threads_exited = true;
 }
 
 void *worker_thread_rot(void *wmsg)
 {
+
     // block SIGPIPE and SIGALRM to ensure only main thread handles them
     sigset_t set;
     sigemptyset(&set);
@@ -48,13 +51,18 @@ void *worker_thread_rot(void *wmsg)
     sigaddset(&set, SIGALRM);
     pthread_sigmask(SIG_BLOCK, &set, NULL);
 
+
     WorkerMessage *wmsgtemp = (WorkerMessage *)wmsg;
 
     Message msg = wmsgtemp->msg;
 
     // Send to library
 
-    msg.tskres = too_late ? -1 : task(msg.tskload);
+
+    msg.tskres = task(msg.tskload);
+
+    if (too_late) msg.tskres = -1;
+
 
     ServerMessage smsg;
     smsg.s_pid = msg.pid;
@@ -67,6 +75,8 @@ void *worker_thread_rot(void *wmsg)
 
     bool ans;
 
+
+
     do {
         pthread_mutex_lock(&mutex);
 
@@ -74,7 +84,6 @@ void *worker_thread_rot(void *wmsg)
 
         pthread_mutex_unlock(&mutex);
 
-        usleep(5);
     } while (!ans);
 
 
@@ -82,6 +91,8 @@ void *worker_thread_rot(void *wmsg)
         output(&msg, TSKEX);
 
     free(wmsg);
+
+    write(STDOUT_FILENO, "Thread done\n", strlen("Thread done\n"));
 
     return NULL;
 }
@@ -100,16 +111,12 @@ void *consumer_thread(void *arg)
     while (1)
     {
         do {
-            if (all_threads_exited && queue_empty())
-                return NULL;
-                
             pthread_mutex_lock(&mutex);
 
             smsg = dequeue();
 
             pthread_mutex_unlock(&mutex);
 
-            usleep(5);
         } while (smsg == NULL);
 
         smsg->msg.tid = pthread_self();
@@ -157,7 +164,7 @@ int main(int argc, char **argv)
     snprintf(thread_id_file, 1024, "/tmp/%d", getpid());
     thread_file = open(thread_id_file, O_CREAT | O_TRUNC | O_RDWR);
 
-    atexit(handle_thread_id_file);
+    atexit(handle_exit);
 
     // Check for arguments
     if (!(argc == 4 || argc == 6))
@@ -209,8 +216,12 @@ int main(int argc, char **argv)
 
         if (read(fd, msg, sizeof(Message)) <= 0)
         {
-            if (too_late) break;
-            continue;
+            if (too_late) {
+                close(fd);
+                break;
+            }
+            else
+                continue;
         }
         Message output_msg = *(Message *)msg;
 
@@ -224,19 +235,29 @@ int main(int argc, char **argv)
         wmsg->i = thread_no;
         wmsg->msg = *(Message *)(msg);
         pthread_create(&id, NULL, worker_thread_rot, wmsg);
-
+        write(STDOUT_FILENO, "Thread created\n", strlen("Thread created\n"));
         write(thread_file, &id, sizeof(pthread_t));
 
         thread_no++;
     }
 
+    sleep(5);
+
     kill_all_worker_threads();
 
-    all_threads_exited = true;
+    bool empty;
 
-    pthread_join(c_id, NULL);
+    do {
+        pthread_mutex_lock(&mutex);
 
-    close(fd);
+        empty = queue_empty();
+
+        pthread_mutex_unlock(&mutex);
+
+    } while (!empty);
+    
+    
+    pthread_cancel(c_id);
 
     exit(EXIT_SUCCESS);
 }
