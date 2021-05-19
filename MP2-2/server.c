@@ -26,6 +26,8 @@ pthread_mutex_t mutex;
 
 bool too_late = false;
 
+extern bool over;
+
 void *worker_thread_rot(void *wmsg)
 {
     // block SIGPIPE and SIGALRM to ensure only main thread handles them
@@ -96,6 +98,9 @@ void *consumer_thread(void *arg)
             usleep(5);
         } while (smsg == NULL);
 
+
+        write(STDOUT_FILENO, "Pattern\n", strlen("Pattern\n"));
+
         smsg->msg.tid = pthread_self();
 
         int p_fifo;
@@ -116,7 +121,7 @@ void *consumer_thread(void *arg)
         {
             output(&smsg->msg, TSKDN);
         }
-        else if (written_bytes == sizeof(Message) && smsg->msg.tskres == -1)
+        else if ((written_bytes == sizeof(Message) && smsg->msg.tskres == -1) || too_late)
         {
             output(&smsg->msg, LATE);
         }
@@ -186,6 +191,7 @@ int main(int argc, char **argv)
     {
         if (read(fd, msg, sizeof(Message)) <= 0)
         {
+            if (over) break;
             continue;
         }
         Message output_msg = *(Message *)msg;
@@ -203,6 +209,15 @@ int main(int argc, char **argv)
 
         thread_no++;
     }
+
+    for (int i = 0; i < thread_no; i++) {
+        pthread_join(ids[i], NULL);
+    }
+
+    while (!queue_empty())
+        ;
+
+    close(fd);
 
     exit(EXIT_SUCCESS);
 }

@@ -6,11 +6,4 @@ void sigalrm_handler()
 
     too_late = true;
     over = true;
-
-    while (!queue_empty())
-        ;
-
-    close(fd);
-
-    exit(EXIT_SUCCESS);
 }
