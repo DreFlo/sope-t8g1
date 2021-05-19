@@ -12,7 +12,6 @@
 #include "server_utils.h"
 
 extern char * fifoname;
-extern unsigned int thread_no;
 extern pthread_t c_id;
 extern bool too_late;
 extern int fd;

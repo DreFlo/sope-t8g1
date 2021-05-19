@@ -40,6 +40,7 @@ typedef enum
 extern int buffer_length;
 extern ServerMessage *buffer;
 extern bool too_late;
+extern int thread_no;
 
 bool enqueue(ServerMessage s_msg);
 
@@ -53,5 +54,7 @@ bool queue_empty();
  * @param op Operation to register
  */
 void output(Message *msg, Operation op);
+
+void consumer_cleanup(void * arg);
 
 #endif  // MP2_2_SERVER_UTILS_H_

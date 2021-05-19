@@ -85,3 +85,14 @@ void output(Message *msg, Operation op)
 
     write(STDOUT_FILENO, output, strlen(output));
 }
+
+void consumer_cleanup(void * arg) {
+    int latest = *(int *)arg;
+    write(STDOUT_FILENO, "Here\n", strlen("Here\n"));
+    Message msg = {latest, getpid(), pthread_self(), 0, -1};
+    for (int i = latest + 1; i < thread_no; i++) {
+        msg.rid = i;
+        output(&msg, FAILD);
+    }
+    free(arg);
+}

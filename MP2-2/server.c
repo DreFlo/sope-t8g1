@@ -14,7 +14,7 @@
 #include "server_signals.h"
 #include "server_utils.h"
 
-unsigned int thread_no = 0;
+int thread_no = 0;
 char *fifoname;
 int fd;
 int buffer_length = 1;
@@ -92,8 +92,6 @@ void *worker_thread_rot(void *wmsg)
 
     free(wmsg);
 
-    write(STDOUT_FILENO, "Thread done\n", strlen("Thread done\n"));
-
     return NULL;
 }
 
@@ -105,6 +103,10 @@ void *consumer_thread(void *arg)
     sigaddset(&set, SIGPIPE);
     sigaddset(&set, SIGALRM);
     pthread_sigmask(SIG_BLOCK, &set, NULL);
+
+    int * maxThread = malloc(sizeof(int));
+
+    pthread_cleanup_push(consumer_cleanup, maxThread);
 
     ServerMessage * smsg;
 
@@ -118,6 +120,8 @@ void *consumer_thread(void *arg)
             pthread_mutex_unlock(&mutex);
 
         } while (smsg == NULL);
+
+        *maxThread = smsg->msg.tid > *maxThread ? smsg->msg.tid : *maxThread; 
 
         smsg->msg.tid = pthread_self();
 
@@ -150,6 +154,8 @@ void *consumer_thread(void *arg)
 
         free(smsg);
     }
+
+    pthread_cleanup_pop(1);
 }
 
 int main(int argc, char **argv)
@@ -235,7 +241,6 @@ int main(int argc, char **argv)
         wmsg->i = thread_no;
         wmsg->msg = *(Message *)(msg);
         pthread_create(&id, NULL, worker_thread_rot, wmsg);
-        write(STDOUT_FILENO, "Thread created\n", strlen("Thread created\n"));
         write(thread_file, &id, sizeof(pthread_t));
 
         thread_no++;
@@ -254,8 +259,8 @@ int main(int argc, char **argv)
 
     } while (!empty);
     
-    
     pthread_cancel(c_id);
+    printf("Ended\n");
 
     exit(EXIT_SUCCESS);
 }
