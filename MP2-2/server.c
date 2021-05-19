@@ -241,8 +241,6 @@ int main(int argc, char **argv)
         thread_no++;
     }
 
-    sleep(5);
-
     kill_all_worker_threads();
 
     bool empty;
