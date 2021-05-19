@@ -39,8 +39,7 @@ typedef enum
 
 extern int buffer_length;
 extern ServerMessage *buffer;
-
-bool over;
+extern bool too_late;
 
 bool enqueue(ServerMessage s_msg);
 

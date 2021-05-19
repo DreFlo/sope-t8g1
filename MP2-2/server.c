@@ -17,16 +17,27 @@
 unsigned int thread_no = 0;
 char *fifoname;
 int fd;
-pthread_t ids[1024];
 int buffer_length = 1;
 ServerMessage *buffer;
 extern int index_buffer;
 pthread_t c_id;
 pthread_mutex_t mutex;
-
 bool too_late = false;
+bool all_threads_exited = false;
+char thread_id_file[1024];
+int thread_file;
 
-extern bool over;
+void handle_thread_id_file(void) {
+    close(thread_file);
+    unlink(thread_id_file);
+}
+
+void kill_all_worker_threads(void) {
+    pthread_t id;
+    while(read(thread_file, &id, sizeof(pthread_t)) > 0) {
+        pthread_join(id, NULL);
+    }
+}
 
 void *worker_thread_rot(void *wmsg)
 {
@@ -89,6 +100,9 @@ void *consumer_thread(void *arg)
     while (1)
     {
         do {
+            if (all_threads_exited && queue_empty())
+                return NULL;
+                
             pthread_mutex_lock(&mutex);
 
             smsg = dequeue();
@@ -97,9 +111,6 @@ void *consumer_thread(void *arg)
 
             usleep(5);
         } while (smsg == NULL);
-
-
-        write(STDOUT_FILENO, "Pattern\n", strlen("Pattern\n"));
 
         smsg->msg.tid = pthread_self();
 
@@ -132,16 +143,21 @@ void *consumer_thread(void *arg)
 
         free(smsg);
     }
-
-    return NULL;
 }
 
 int main(int argc, char **argv)
 {
+    // Block SIGPIPE
     sigset_t set;
     sigemptyset(&set);
     sigaddset(&set, SIGPIPE);
     sigprocmask(SIG_BLOCK, &set, NULL);
+
+    // Create thread id file
+    snprintf(thread_id_file, 1024, "/tmp/%d", getpid());
+    thread_file = open(thread_id_file, O_CREAT | O_TRUNC | O_RDWR);
+
+    atexit(handle_thread_id_file);
 
     // Check for arguments
     if (!(argc == 4 || argc == 6))
@@ -189,9 +205,11 @@ int main(int argc, char **argv)
 
     while (1)
     {
+        pthread_t id;
+
         if (read(fd, msg, sizeof(Message)) <= 0)
         {
-            if (over) break;
+            if (too_late) break;
             continue;
         }
         Message output_msg = *(Message *)msg;
@@ -205,17 +223,18 @@ int main(int argc, char **argv)
         WorkerMessage *wmsg = malloc(sizeof(WorkerMessage));
         wmsg->i = thread_no;
         wmsg->msg = *(Message *)(msg);
-        pthread_create(&ids[thread_no], NULL, worker_thread_rot, wmsg);
+        pthread_create(&id, NULL, worker_thread_rot, wmsg);
+
+        write(thread_file, &id, sizeof(pthread_t));
 
         thread_no++;
     }
 
-    for (int i = 0; i < thread_no; i++) {
-        pthread_join(ids[i], NULL);
-    }
+    kill_all_worker_threads();
 
-    while (!queue_empty())
-        ;
+    all_threads_exited = true;
+
+    pthread_join(c_id, NULL);
 
     close(fd);
 

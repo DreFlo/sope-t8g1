@@ -33,7 +33,7 @@ ServerMessage * dequeue()
 bool queue_empty()
 {
     static unsigned t = 0;
-    if (over) {
+    if (too_late) {
         t++;
     }
     if (t > 10000) return true;
