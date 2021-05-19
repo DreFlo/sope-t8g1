@@ -18,11 +18,11 @@ unsigned int thread_no = 0;
 char *fifoname;
 int fd;
 pthread_t ids[1024];
-unsigned buffer_length = 1;
+int buffer_length = 1;
 ServerMessage *buffer;
-sem_t semaphore;
 extern int index_buffer;
 pthread_t c_id;
+pthread_mutex_t mutex;
 
 bool too_late = false;
 
@@ -52,7 +52,18 @@ void *worker_thread_rot(void *wmsg)
     msg.rid = wmsgtemp->i;
     smsg.msg = msg;
 
-    enqueue(smsg);
+    bool ans;
+
+    do {
+        pthread_mutex_lock(&mutex);
+
+        ans = enqueue(smsg);
+
+        pthread_mutex_unlock(&mutex);
+
+        usleep(5);
+    } while (!ans);
+
 
     if (!too_late)
         output(&msg, TSKEX);
@@ -71,36 +82,50 @@ void *consumer_thread(void *arg)
     sigaddset(&set, SIGALRM);
     pthread_sigmask(SIG_BLOCK, &set, NULL);
 
-    ServerMessage smsg;
+    ServerMessage * smsg;
 
     while (1)
     {
-        dequeue(&smsg);
+        do {
+            pthread_mutex_lock(&mutex);
+
+            smsg = dequeue();
+
+            pthread_mutex_unlock(&mutex);
+
+            usleep(5);
+        } while (smsg == NULL);
+
+        smsg->msg.tid = pthread_self();
 
         int p_fifo;
         char private_fifoname[256];
-        snprintf(private_fifoname, sizeof(private_fifoname), "/tmp/%d.%lu", smsg.s_pid, smsg.s_tid);
+        snprintf(private_fifoname, sizeof(private_fifoname), "/tmp/%d.%lu", smsg->s_pid, smsg->s_tid);
 
         if ((p_fifo = open(private_fifoname, O_WRONLY)) < 0)
         {
-            output(&smsg.msg, FAILD);
+            output(&smsg->msg, FAILD);
             continue;
         }
 
-        int written_bytes = write(p_fifo, (void *)&smsg.msg, sizeof(Message));
+        if (too_late) smsg->msg.tskres = -1;
 
-        if (written_bytes == sizeof(Message) && smsg.msg.tskres != -1)
+        int written_bytes = write(p_fifo, (void *)&smsg->msg, sizeof(Message));
+
+        if (written_bytes == sizeof(Message) && smsg->msg.tskres != -1)
         {
-            output(&smsg.msg, TSKDN);
+            output(&smsg->msg, TSKDN);
         }
-        else if (written_bytes == sizeof(Message) && smsg.msg.tskres == -1)
+        else if (written_bytes == sizeof(Message) && smsg->msg.tskres == -1)
         {
-            output(&smsg.msg, LATE);
+            output(&smsg->msg, LATE);
         }
         else
         {
-            output(&smsg.msg, FAILD);
+            output(&smsg->msg, FAILD);
         }
+
+        free(smsg);
     }
 
     return NULL;
@@ -142,9 +167,6 @@ int main(int argc, char **argv)
     sighandler.sa_flags = 0;
     if (sigaction(SIGALRM, &sighandler, NULL) == -1)
         perror("sigaction");
-    // Semaphore creation
-
-    sem_init(&semaphore, 0, buffer_length);
 
     // Fifo Creation
     if (mkfifo(fifoname, ALLPERMS) < 0)

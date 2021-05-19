@@ -7,7 +7,8 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdbool.h>
-
+#include <unistd.h>
+#include <string.h>
 #include "common.h"
 
 typedef struct
@@ -36,13 +37,14 @@ typedef enum
 	FAILD
 } Operation;
 
-extern unsigned buffer_length;
+extern int buffer_length;
 extern ServerMessage *buffer;
-extern sem_t semaphore;
 
-void enqueue(ServerMessage s_msg);
+bool over;
 
-void dequeue(ServerMessage *s_msg);
+bool enqueue(ServerMessage s_msg);
+
+ServerMessage * dequeue();
 
 bool queue_empty();
 

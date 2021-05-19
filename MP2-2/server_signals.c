@@ -2,14 +2,15 @@
 
 void sigalrm_handler()
 {
-    close(fd);
+    unlink(fifoname);
 
     too_late = true;
+    over = true;
 
     while (!queue_empty())
         ;
 
-    unlink(fifoname);
+    close(fd);
 
     exit(EXIT_SUCCESS);
 }

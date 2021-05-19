@@ -1,46 +1,43 @@
 #include "server_utils.h"
 
-int index_buffer = 0;
+int index_buffer = -1;
 int semaphoreval;
 
-void enqueue(ServerMessage s_msg)
+bool enqueue(ServerMessage s_msg)
 {
-    if (sem_wait(&semaphore) < 0)
-        perror("sem_wait() error");
-
-    buffer[index_buffer] = s_msg;
-    index_buffer++;
+    if (index_buffer >= buffer_length - 1) 
+        return false;
+    else {
+        buffer[++index_buffer] = s_msg;
+        return true;
+    }
 }
 
-void dequeue(ServerMessage *s_msg)
+ServerMessage * dequeue()
 {
-    // wait while queue empty
-    do
-    {
-        sem_getvalue(&semaphore, &semaphoreval);
-    } while (semaphoreval >= buffer_length);
+    if (queue_empty()) return NULL;
 
-    *s_msg = buffer[0];
+    ServerMessage * ret = malloc(sizeof(ServerMessage));
+    *ret = buffer[0];
 
-    for (int i = 1; i < index_buffer; i++)
+    for (int i = 1; i <= index_buffer; i++)
     {
         buffer[i - 1] = buffer[i];
     }
 
     index_buffer--;
 
-    if (sem_post(&semaphore) < 0)
-        perror("sem_post() error");
+    return ret;
 }
 
 bool queue_empty()
 {
-    /*
-    static unsigned use_no = 0;
-    use_no++;
-    if (use_no > 100000) return true;
-    */
-    return semaphoreval >= buffer_length;
+    static unsigned t = 0;
+    if (over) {
+        t++;
+    }
+    if (t > 10000) return true;
+    return index_buffer < 0;
 }
 
 void output(Message *msg, Operation op)
@@ -86,5 +83,5 @@ void output(Message *msg, Operation op)
         exit(EXIT_FAILURE);
     }
 
-    printf("%s", output);
+    write(STDOUT_FILENO, output, strlen(output));
 }
