@@ -23,6 +23,7 @@ Source files:
 ### Implementation Details
 
 * For synchronization, we resort to mutexes to access the buffer and avoid memory conflicts.
+* We are creating a file to store all the thread IDs which is also used to destroy the worker threads at the end 
 * Unfourtunately, we could not solve a problem regarding the FAILD event, which leads to the fact that some producer threads are terminating before expected.
 
 ### Group Members and Self Evaluation
